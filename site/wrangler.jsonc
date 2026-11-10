@@ -1,0 +1,17 @@
+{
+  // tryambient.app landing page: static assets + a small Worker for the alpha waitlist.
+  "name": "ambient-site",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "workers_dev": true,
+  "d1_databases": [
+    { "binding": "DB", "database_name": "ambient-waitlist", "database_id": "9c808b35-288b-46e8-bd70-b6c8bd9c3a2d", "migrations_dir": "migrations" }
+  ],
+  // Routes, not custom domains: the zone's proxied A/CNAME records (Namecheap parking,
+  // never reached) make the hostnames resolve to Cloudflare; the Worker answers everything.
+  "routes": [
+    { "pattern": "tryambient.app/*", "zone_name": "tryambient.app" },
+    { "pattern": "www.tryambient.app/*", "zone_name": "tryambient.app" }
+  ]
+}

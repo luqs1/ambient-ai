@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# lin-push <local path> <remote path>: copy a file or folder into the Ubuntu VM.
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+[ $# -eq 2 ] || { echo "usage: lin-push <local> <remote>" >&2; exit 2; }
+vm_push lin "$1" "$2"

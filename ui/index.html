@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ambient</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+
+<header class="sky">
+  <div class="bar" style="max-width:1120px; margin:0 auto">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/>
+        <path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+        <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/>
+        <path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+        <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/>
+        <path fill="#c8e64a" d="M0 54L64 50V54L54 64H10L0 54Z"/>
+        <path fill="#62e6d8" d="M22 64L31 52H35L29 64Z"/>
+      </svg>Ambient</div>
+    <span class="status" id="status"><i></i><span>Listening</span></span>
+    <div class="tabs" role="tablist"><button class="on" data-tab="moments" role="tab">Moments</button><button data-tab="apps" role="tab">Apps</button></div>
+    <span class="spacer"></span>
+    <a class="armedchip" id="armed" href="#triggers-col"><i></i><span></span></a>
+    <!-- Veil (secrets kept out of agent traffic) and the raw traffic view: hidden while SHOW_VEIL is false in app.js -->
+    <span class="shieldchip" id="shield" hidden title="Veil swapped these for placeholders before they reached the model">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0L15 3V8C15 12 12 15 8 16C4 15 1 12 1 8V3Z"/></svg><span></span></span>
+    <div class="apps" id="apps"></div>
+    <a class="details" id="details" href="/traffic" hidden>details</a>
+  </div>
+  <div class="valley" aria-hidden="true">
+    <svg class="tile flip" viewBox="0 0 1200 96"></svg>
+    <svg class="tile" viewBox="0 0 1200 96"><g id="ridge">
+    <path class="far" d="M0 60L90 30L170 52L260 18L350 50L430 26L520 54L610 22L700 48L800 14L880 46L960 24L1050 50L1130 20L1200 40V96H0Z"/>
+    <path class="far2" d="M260 18L300 52L350 50Z M800 14L840 50L880 46Z M610 22L640 52L700 48Z"/>
+    <path class="mid" d="M0 72L120 44L210 66L330 38L440 70L560 40L660 70L780 42L900 72L1010 44L1110 68L1200 50V96H0Z"/>
+    <path class="mid2" d="M330 38L380 72L440 70Z M780 42L820 74L900 72Z M120 44L160 70L210 66Z M1010 44L1050 70L1110 68Z"/>
+    <path class="near" d="M0 82L160 62L300 84L470 60L620 86L790 64L960 86L1090 66L1200 80V96H0Z"/>
+    <path class="mea" d="M0 90L220 78L420 92L640 80L860 94L1060 80L1200 88V96H0Z"/>
+    <path class="mea2" d="M220 78L300 92L420 92Z M860 94L960 84L1060 80Z"/>
+    <path class="pd" d="M1088 92L1100 52L1112 92Z"/><path class="pl" d="M1100 52L1112 92L1104 92Z"/>
+    <path class="pd" d="M1114 94L1124 62L1134 94Z"/><path class="pl" d="M1124 62L1134 94L1127 94Z"/>
+    <path class="pd" d="M70 94L80 66L90 94Z"/><path class="pl" d="M80 66L90 94L84 94Z"/>
+    <path class="gr" d="M0 94L1200 92V96H0Z"/>
+  </g></svg>
+    <svg class="tile flip" viewBox="0 0 1200 96"></svg>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="todo" id="todo" style="display:none"></div>
+
+  <!-- Moments: what matched your triggers, and the triggers themselves -->
+  <div class="view" id="view-moments">
+    <main id="main">
+      <section>
+        <h2>Moments</h2><p class="hint">Things that matched one of your triggers, as they happen.</p>
+        <div class="feed" id="feed"></div>
+      </section>
+      <section>
+        <h2 id="triggers-col">Triggers</h2><p class="hint" id="t-hint">When something happens, what your agent does.</p>
+        <div class="triggers" id="triggers"></div>
+        <div style="margin-top:16px"><button class="btn add" id="addBtn">+ New trigger</button></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Apps: the apps Ambient is connected to, in a fixed order. Click one to see what it can see. -->
+  <div class="view" id="view-apps" hidden>
+    <div id="apps-list">
+      <div class="act-head">
+        <div class="grow"><h2>Apps</h2><p class="hint" style="margin:0" id="apps-hint">The apps Ambient can read. Pick one to see what it notices there.</p></div>
+      </div>
+      <h3 class="grouph" id="g-apps-h">Apps</h3>
+      <div class="appgrid" id="g-apps"></div>
+      <h3 class="grouph" id="g-sites-h">Websites</h3>
+      <div class="appgrid sites" id="g-sites"></div>
+    </div>
+    <div id="app-detail" hidden></div>
+  </div>
+</div>
+
+<!-- Trigger builder -->
+<div class="sheetwrap" id="sheet" hidden>
+  <form class="slip sheet" id="builder" autocomplete="off">
+    <h3 id="b-title">New trigger</h3>
+    <label class="big" for="b-when">When…</label>
+    <input class="line" id="b-when" placeholder="someone asks me for a file" aria-describedby="b-when-sub">
+    <p class="sub" id="b-when-sub">Say it in your own words. Ambient finds the matching activity in your apps.</p>
+    <div class="sugg" id="b-sugg"></div>
+    <div class="recbar" id="b-rec"><button type="button" class="linkbtn" id="b-recbtn">Not listed? Show me once</button><span id="b-recmsg"></span></div>
+
+    <div class="gatebox" id="b-gate" hidden>
+      <div class="top">
+        <svg class="lock" viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M3 5V3.5a3 3 0 0 1 6 0V5h1v7H2V5Zm1.5 0h3V3.5a1.5 1.5 0 0 0-3 0Z"/></svg>
+        <span class="grow">Only fire when the content really matches my sentence <small style="color:var(--teal-ink)">· checked on this device</small></span>
+        <input type="checkbox" class="switch" id="b-sem" aria-label="Check meaning on this device">
+      </div>
+      <div class="top" id="b-strict" style="margin-top:8px; font-size:12.5px"><span>Looser</span><input type="range" id="b-thr" min="0.2" max="0.9" step="0.05" value="0.5" aria-label="Strictness"><span>Stricter</span></div>
+      <div class="preview" id="b-preview"></div>
+    </div>
+
+    <label class="big" for="b-instr">Then my agent should…</label>
+    <textarea class="line" id="b-instr" placeholder="e.g. find the file they mean on this computer and draft a reply with its path"></textarea>
+    <div class="ideas" id="b-ideas">
+      <button type="button">Draft a reply in my voice</button>
+      <button type="button">Summarise it and tell me if it's urgent</button>
+      <button type="button">Turn it into a todo with a due date</button>
+    </div>
+
+    <div class="foot">
+      <div class="seg" id="b-auto"><button type="button" class="on" data-v="0">Ask me first</button><button type="button" data-v="1">Run automatically</button></div>
+      <select class="sel" id="b-agent" aria-label="Which agent runs it"></select>
+      <span class="grow"></span>
+      <button type="button" class="btn quiet" id="b-cancel">Cancel</button>
+      <button class="btn go" type="submit">Save trigger</button>
+    </div>
+    <div class="err" id="b-err"></div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="modal" id="modal" hidden><div class="slip box" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <b id="m-title"></b><p id="m-body"></p>
+  <div class="row"><span class="grow"></span><button class="btn quiet" id="m-no">Cancel</button><button class="btn go" id="m-yes">OK</button></div>
+</div></div>
+<script src="/assets/app.js"></script>
+</body>
+</html>

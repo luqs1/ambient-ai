@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# win-exec <command...>: run a PowerShell command in the Windows VM (elevated admin). Example: win-exec "Get-Service sshd"
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+vm_exec win "$@"

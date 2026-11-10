@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambient · proactive agents, on your terms</title>
+<meta name="description" content="Write triggers in plain words. Local code and offline classifiers on your computer decide when an agent should act, so agents see one message, never your whole day. Early alpha for macOS, Windows and Linux. Fair source.">
+<meta name="theme-color" content="#2b27c9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0c3d" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Ambient">
+<meta property="og:description" content="Proactive agents, without the surveillance.">
+<meta property="og:image" content="https://tryambient.app/assets/icon-256.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Ambient","url":"https://tryambient.app/",
+ "description":"Proactive agent triggers in plain words, checked on your own computer.",
+ "applicationCategory":"ProductivityApplication","operatingSystem":"macOS, Windows, Linux","softwareVersion":"0.1.0",
+ "downloadUrl":["https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_aarch64.dmg","https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64-setup.exe","https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_amd64.deb"],
+ "sameAs":["https://github.com/luqs1/ambient-ai"]}
+</script>
+<link rel="preload" href="/assets/fonts/YoungSerif-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init("phc_WYptPe3ouS3hMDDMFp28qGbI9UcbyZOM6aO8IYMvVBn", {
+    api_host: "https://eu.i.posthog.com",
+    persistence: "memory",          // no cookies, no banner
+    person_profiles: "identified_only"
+  });
+</script>
+<style>
+  /* ── Palette: riso inks on cream stock. Day by default, dusk in dark mode. ── */
+  :root{
+    --paper:#f7f0dc; --card:#fffaee; --chip:#ece4cb;
+    --ink:#1b1747; --ink-2:#4a4577; --ink-3:#7a76a3;
+    --deep:#1b1747;
+    --ultra:#2b27c9; --violet:#6a4fd0; --violet-ink:#5638c4; --lime:#c9ec3f; --coral:#ff6f59; --coral-ink:#c23a26; --peach:#ffc6a0; --aqua:#62e6d8; --teal-ink:#0e6b66;
+    --on-sky:#fbf4e2; --on-sky-2:rgba(251,244,226,.84);
+    /* sky */
+    --sky-a:#2420b8; --sky-b:#2d4fd0; --sky-c:#1e86b0; --sky-d:#f3ad95;
+    /* terrain inks */
+    --far:#b6a7f0; --far-2:#f0a9c0; --mid:#6a4fd0; --mid-2:#4f74d8; --near:#3a2c9c; --near-2:#2a5f93;
+    --meadow:#c8e64a; --meadow-2:#8dd05a; --river:#62e6d8; --river-hi:#e6fff8;
+    --pine-l:#3c8a76; --pine-d:#1e3a6e;
+    --glint:#ffd8b0; --shade:#1b1747; --sun-1:#ffb18c; --sun-2:#ff9473; --cloud:#ffd3c4; --spark:#fff6dc;
+    --band:#2a2290; --foot:#1b1747;
+    --offset:var(--violet);
+    --chip-lime:#e6f6a3; --chip-lime-ink:#2c3a07; --chip-coral:#ffd8cd; --chip-coral-ink:#a3301f; --chip-aqua:#c9f6ef;
+    --display:"Young Serif", "Iowan Old Style", Georgia, serif;
+    --body:"Schibsted Grotesk", ui-sans-serif, -apple-system, sans-serif;
+    --mono:"Spline Sans Mono", ui-monospace, Menlo, monospace;
+    --cut:16px;
+    --grain-o:.28;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#13113a; --card:#1e1a55; --chip:#28236a;
+      --ink:#f7f0dc; --ink-2:#c7c1ea; --ink-3:#928cc4;
+      --violet-ink:#b9a8ff; --coral-ink:#ff9a86; --teal-ink:#7ff0e3;
+      --sky-a:#0b0a33; --sky-b:#1a1f72; --sky-c:#1d4f86; --sky-d:#a8607e;
+      --far:#5b4bb0; --far-2:#8a4f8e; --mid:#3b2c92; --mid-2:#2c3f8e; --near:#231a63; --near-2:#173d63;
+      --meadow:#7f9c2a; --meadow-2:#4c8a4c; --river:#3fcfc4; --river-hi:#b8fff2;
+      --pine-l:#23615a; --pine-d:#0f1b45;
+      --glint:#ffb48a; --shade:#05041a; --sun-1:#fff0c8; --sun-2:#ffe2ae; --cloud:#c08aa8; --spark:#fff6dc;
+      --band:#1d1764; --foot:#08071f;
+      --offset:#4a37c0;
+      --chip-lime:rgba(201,236,63,.15); --chip-lime-ink:#d8f56a; --chip-coral:rgba(255,111,89,.18); --chip-coral-ink:#ffa08c; --chip-aqua:rgba(98,230,216,.14);
+      --grain-o:.22;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; background:var(--paper)}
+  body{margin:0; color:var(--ink); background:var(--paper); font:17px/1.55 var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip}
+  /* fine riso grain over everything */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:var(--grain-o); mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .25  2.6 0 0 0 -1.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark){
+    body::after{mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 .95  0 0 0 0 .85  2.6 0 0 0 -1.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  }
+  /* uneven ink density on the printed art */
+  .print{position:relative; isolation:isolate}
+  .print::after{
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:1; mix-blend-mode:soft-light; opacity:.7;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .014' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 .1  1.6 0 0 0 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+    background-size:100% 100%; background-repeat:no-repeat;
+  }
+  a{color:inherit}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 28px; position:relative; z-index:2}
+
+  /* ── SVG inks ── */
+  svg .b{fill:var(--c)} svg .a{fill:var(--c2)} svg .g{fill:var(--glint)} svg .s{fill:var(--shade)}
+  .Lfar{--c:var(--far); --c2:var(--far-2)}
+  .Lmid{--c:var(--mid); --c2:var(--mid-2)}
+  .Lnear{--c:var(--near); --c2:var(--near-2)}
+  .Lmeadow,.Lhill{--c:var(--meadow); --c2:var(--meadow-2)}
+  .Lfg{--c:var(--paper)}
+  .Lfoot{--c:var(--foot)}
+  .Lband{--c:var(--band)}
+  svg .pl{fill:var(--pine-l)} svg .pd{fill:var(--pine-d)}
+  svg .rv{fill:var(--river)} svg .rvh{fill:var(--river-hi); opacity:.5}
+  svg .sun1{fill:var(--sun-1)} svg .sun2{fill:var(--sun-2)}
+  svg .moon1{fill:var(--sun-1)} svg .moon2{fill:var(--sun-2)}
+  svg .cl{fill:var(--cloud); opacity:.55}
+  svg .tw{fill:var(--spark); transform-box:fill-box; transform-origin:center; animation:twinkle 4.6s ease-in-out infinite}
+  .stars{opacity:.55}
+  @media (prefers-color-scheme: dark){ .stars{opacity:1} svg .cl{opacity:.35} }
+  .ly{transform:translate(calc(var(--mx,0) * var(--k,0) * -26px), calc(var(--sy,0) * var(--k,0) * 1px)); will-change:transform}
+  .Lsky .cl:nth-of-type(odd){animation:drift 48s ease-in-out infinite alternate}
+  .Lsky .cl:nth-of-type(even){animation:drift 62s ease-in-out -20s infinite alternate-reverse}
+  @keyframes drift{from{transform:translateX(-30px)} to{transform:translateX(40px)}}
+  @keyframes twinkle{0%,100%{opacity:.15; transform:scale(.35) rotate(0)} 50%{opacity:1; transform:scale(1) rotate(45deg)}}
+
+  /* ── Brand ── */
+  nav{display:flex; align-items:center; justify-content:space-between; padding:24px 0}
+  .brand{display:flex; align-items:center; gap:11px; text-decoration:none; font:400 23px/1 var(--display); letter-spacing:-.005em; color:var(--on-sky)}
+  .brand svg{width:34px; height:34px; display:block}
+  .pill{display:inline-flex; align-items:center; text-decoration:none; font:600 14px/1 var(--body); padding:11px 16px; color:var(--deep); background:var(--on-sky);
+        clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:background .2s}
+  .pill:hover{background:var(--lime)}
+
+  /* ── Hero: a valley at the bottom of the sky ── */
+  .hero-shell{
+    --scene-h:clamp(380px, 52.8vw, 860px);
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 34%, var(--sky-c) 62%, var(--sky-d) 84%, var(--sky-d) 100%);
+  }
+  .hero-shell .scene{position:absolute; left:0; bottom:-1px; width:100%; height:var(--scene-h); display:block; z-index:0}
+  .hero > *{min-width:0}
+  .hero{display:grid; grid-template-columns:1.12fr .88fr; gap:36px; align-items:start; padding:30px 0 calc(var(--scene-h) * .54)}
+  .eyebrow{font:500 12.5px/1 var(--mono); color:var(--on-sky-2); letter-spacing:.14em; text-transform:uppercase; display:flex; align-items:center; gap:10px}
+  .eyebrow::before{content:""; width:10px; height:10px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  h1{font:400 clamp(44px,5.7vw,80px)/1.02 var(--display); letter-spacing:-.018em; margin:22px 0 22px; color:var(--on-sky);
+     text-shadow:3px 3px 0 rgba(255,111,89,.5)}
+  h1 em{font-style:normal; color:var(--lime); text-shadow:3px 3px 0 rgba(27,23,71,.45)}
+  .lede{font-size:clamp(18px,1.55vw,21px); line-height:1.5; color:var(--on-sky-2); margin:0 0 30px; max-width:27em}
+
+  /* ── Waitlist form (chamfered paper slip) ── */
+  .join{position:relative; isolation:isolate; display:flex; gap:8px; max-width:450px; padding:7px}
+  .join::before,.join::after{content:""; position:absolute; inset:0; clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+  .join::before{background:var(--card); z-index:-1}
+  .join::after{background:var(--deep); z-index:-2; transform:translate(6px,6px); transition:background .2s, transform .2s}
+  .join:focus-within::after{background:var(--coral); transform:translate(8px,8px)}
+  .join input[type=email]{flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font:16px var(--body); padding:0 12px; outline:none}
+  .join input::placeholder{color:var(--ink-3)}
+  .join button{border:0; cursor:pointer; background:var(--lime); color:#1b1747; font:600 15.5px/1 var(--body); padding:15px 20px; white-space:nowrap;
+               clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:transform .2s ease, background .2s}
+  .join button:hover{background:#d8f75c; transform:translateY(-1px)}
+  .join button:focus-visible{outline:3px solid var(--coral); outline-offset:2px}
+  .join button[disabled]{opacity:.6; cursor:default; transform:none}
+  .hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+  .formnote{font:13px/1.4 var(--mono); color:var(--on-sky-2); margin:14px 0 0 4px; min-height:1.4em}
+  .formnote.err{color:var(--peach)}
+  .done{display:none; align-items:center; gap:12px; max-width:450px; padding:16px 20px; background:var(--card); color:var(--ink); font-size:16px;
+        clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+  .done::before{content:""; flex:none; width:14px; height:14px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); box-shadow:inset 0 0 0 20px var(--lime)}
+  .joined .join, .joined .formnote{display:none}
+  .joined .done{display:flex}
+
+  /* ── Moment cards floating over the valley ── */
+  .field{position:relative; height:440px; margin-top:12px; margin-bottom:calc(var(--scene-h) * -.2)}
+  .moment{position:absolute; z-index:2; width:min(272px,72%); padding:15px 17px 14px; isolation:isolate; --cut:13px;
+          opacity:0; animation:arrive .9s cubic-bezier(.2,.7,.2,1) forwards, float 7s ease-in-out infinite alternate}
+  .moment::before,.moment::after,.card::before,.card::after{content:""; position:absolute; inset:0;
+          clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+  .moment::before{background:var(--card); z-index:-1}
+  .moment::after{background:var(--deep); opacity:.6; z-index:-2; transform:translate(7px,7px)}
+  .moment .src{display:flex; align-items:center; gap:8px; font:500 12px/1 var(--mono); color:var(--ink-3)}
+  .moment .src i{width:9px; height:9px; display:inline-block; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .moment p{margin:9px 0 12px; font-size:15.5px; line-height:1.35; color:var(--ink)}
+  .chip{display:inline-flex; align-items:center; gap:6px; font:600 12.5px/1 var(--body); padding:7px 11px; background:var(--chip-lime); color:var(--chip-lime-ink);
+        clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+  .chip.coral{background:var(--chip-coral); color:var(--chip-coral-ink)}
+  .chip.mute{background:var(--chip); color:var(--ink-3)}
+  .moment.quiet .src,.moment.quiet p{opacity:.72}
+  .moment.quiet p{text-decoration:line-through; text-decoration-color:rgba(127,120,170,.6)}
+  .navr{display:flex; align-items:center; gap:18px}
+  .navlink{color:var(--on-sky); text-decoration:none; font:600 14px/1 var(--body); opacity:.85}
+  .navlink:hover{opacity:1; text-decoration:underline; text-underline-offset:4px}
+  .join select{border:0; background:transparent; color:var(--ink); font:15px var(--body); padding:0 4px; max-width:132px; outline:none; cursor:pointer}
+  .join:has(select){max-width:560px}
+  @media (max-width:560px){ .navlink{display:none} .pill{white-space:nowrap} }
+  @media (max-width:560px){ .join:has(select){flex-wrap:wrap} .join:has(select) input[type=email]{flex-basis:100%; padding:10px 12px} .join:has(select) select{flex:1; padding:8px} }
+  .finenote{margin:18px 0 0; font-size:13px; color:var(--ink-3); max-width:42em}
+  .m1{left:0; top:0; animation-delay:.5s, 1.4s}
+  .m2{right:-2%; top:34%; animation-delay:1.3s, 2.2s}
+  .m3{left:8%; top:68%; animation-delay:2.1s, 3s}
+  @keyframes arrive{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+  @keyframes float{from{translate:0 0} to{translate:0 -8px}}
+
+  /* ── Sections ── */
+  section{padding:90px 0}
+  .kicker{font:500 12.5px/1 var(--mono); color:var(--ink-3); letter-spacing:.14em; text-transform:uppercase; display:flex; align-items:center; gap:10px}
+  .kicker::before{content:""; width:12px; height:10px; background:currentColor; clip-path:polygon(50% 0,100% 100%,0 100%)}
+  .kicker b{font-weight:500}
+  .moments .kicker{color:var(--violet-ink)}
+  h2{font:400 clamp(36px,4.6vw,60px)/1.04 var(--display); letter-spacing:-.015em; margin:16px 0 0}
+  .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:22px 20px; margin-top:42px}
+  .cards.three{grid-template-columns:repeat(3,1fr)}
+  .card{position:relative; isolation:isolate; padding:24px 22px 24px; min-height:176px; transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .card::before{background:var(--card); z-index:-1}
+  .card::after{background:var(--offset); z-index:-2; transform:translate(7px,7px); transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .card:hover{transform:translate(-2px,-2px)} .card:hover::after{transform:translate(10px,10px)}
+  .card .n{font:500 12px/1 var(--mono); color:var(--ink-3); letter-spacing:.06em}
+  .card .glyph{position:absolute; right:18px; top:16px; width:44px; height:44px}
+  .card h3{font:400 22px/1.15 var(--display); letter-spacing:-.005em; margin:30px 0 8px}
+  .card p{margin:0; color:var(--ink-2); font-size:15.5px; line-height:1.45}
+  .flow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:30px; font:13.5px/1.6 var(--mono)}
+  .flow span{padding:6px 11px; background:var(--chip); clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px); overflow-wrap:anywhere}
+  .flow .arr{background:none; padding:0; color:var(--ink-3); clip-path:none}
+  .secret{color:var(--chip-coral-ink); background:var(--chip-coral) !important}
+  .ph{color:var(--teal-ink); background:var(--chip-aqua) !important}
+
+  /* glyph inks */
+  .glyph .q1{fill:var(--sun-2)} .glyph .q2{fill:var(--sun-1)} .glyph .q3{fill:var(--violet)} .glyph .q4{fill:var(--far)}
+  .glyph .q5{fill:var(--lime)} .glyph .q6{fill:var(--meadow-2)} .glyph .q7{fill:var(--river)} .glyph .q8{fill:var(--near)} .glyph .q9{fill:var(--coral)}
+
+  /* ── Download: a dusk band between ridges ── */
+  .band-wrap{position:relative}
+  .edge{display:block; width:100%; height:110px; margin:0 0 -1px}
+  .edge.bottom{height:80px; margin:-1px 0 0}
+  .band{background:var(--band); color:#f7f0dc;
+        --ink:#f7f0dc; --ink-2:#cfc8ef; --ink-3:#a39dd6; --card:#3a31b2; --chip:rgba(255,255,255,.1); --offset:var(--aqua);
+        --chip-coral:rgba(255,111,89,.22); --chip-coral-ink:#ffb3a3; --chip-aqua:rgba(98,230,216,.16); --teal-ink:#8ff3e8}
+  @media (prefers-color-scheme: dark){ .band{--card:#2a2380; --offset:#2a9d97} .Lband{--glint:#9a8af0} }
+  .band section{padding:50px 0 70px}
+  .band .kicker{color:var(--lime)}
+
+  /* ── Runs on your computer ── */
+  .local{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:end}
+  .local .kicker{color:var(--teal-ink)}
+  .badge{position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:20px; padding:20px 26px 20px 20px; margin-top:34px; --cut:14px; font:600 16px var(--body)}
+  .badge::before,.badge::after{content:""; position:absolute; inset:0; clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+  .badge::before{background:var(--card); z-index:-1} .badge::after{background:var(--pine-l); z-index:-2; transform:translate(7px,7px)}
+  .mac{flex:none; width:118px}
+  .mac .screen{display:block; border:4px solid var(--deep); border-bottom-width:9px; border-radius:6px 6px 2px 2px; overflow:hidden; aspect-ratio:200/120; background:var(--sky-b)}
+  @media (prefers-color-scheme: dark){ .mac .screen{border-color:#3b3580} }
+  .mac .screen svg{display:block; width:100%; height:100%; background:linear-gradient(180deg,var(--sky-b),var(--sky-c) 60%,var(--sky-d))}
+  .mac .base{display:block; height:6px; margin:0 -9px; background:var(--deep); clip-path:polygon(0 0,100% 0,94% 100%,6% 100%)}
+  @media (prefers-color-scheme: dark){ .mac .base{background:#3b3580} }
+  .badge small{display:block; color:var(--ink-3); font:500 12.5px var(--mono); margin-top:4px}
+  .grove{display:block; width:100%; max-width:500px; height:auto; justify-self:end; overflow:visible; animation:bob 9s ease-in-out infinite alternate}
+  svg .rk1{fill:var(--far)} svg .rk2{fill:var(--mid)}
+  @keyframes bob{from{transform:translateY(0)} to{transform:translateY(-12px)}}
+  .cta .edge.paper{position:absolute; top:-1px; left:0; width:100%; height:64px; margin:0; z-index:1}
+
+  /* ── Closing: same valley at dusk ── */
+  .cta{position:relative; overflow:hidden; text-align:center; color:var(--on-sky);
+       --scene-h:clamp(260px, 32vw, 520px);
+       --far:#8b6fdc; --far-2:#d77aa6; --mid:#5a3db8; --mid-2:#3f4fb8; --near:#2c2185; --near-2:#24497c; --pine-l:#2f5f78; --pine-d:#171448; --glint:#ffb48a;
+       background:linear-gradient(180deg, #2420b8 0%, #5a3fc6 38%, #c0629a 64%, #ff9a72 84%, #ff9a72 100%);
+       padding:110px 0 calc(var(--scene-h) * .62)}
+  @media (prefers-color-scheme: dark){
+    .cta{--far:#43358f; --far-2:#6b3f7e; --mid:#2c2275; --mid-2:#22306e; --near:#17124a; --near-2:#112c4a; --pine-l:#1a3e4f; --pine-d:#0a0a2a;
+         background:linear-gradient(180deg, #050420 0%, #120f4a 40%, #3a2466 68%, #7a3f6a 88%, #7a3f6a 100%)}
+  }
+  .cta .scene{position:absolute; left:0; bottom:-1px; width:100%; height:var(--scene-h); z-index:0}
+  .cta .kicker{justify-content:center; color:var(--on-sky-2)}
+  .cta .kicker::before{background:var(--lime)}
+  .cta h2{margin:16px auto 32px; color:var(--on-sky); text-shadow:3px 3px 0 rgba(255,111,89,.45)}
+  .cta .join, .cta .done{margin:0 auto}
+  .cta .formnote{text-align:center; margin-left:0}
+  .foot{background:var(--foot); color:rgba(247,240,220,.72)}
+  footer{padding:26px 0 40px; font-size:14px; display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; font-family:var(--mono); letter-spacing:.02em}
+
+  /* ── Download + source links ── */
+  .gh{display:inline-flex; align-items:center; gap:7px}
+  .gh svg{width:18px; height:18px; flex:none; fill:currentColor}
+  .navr .gh.navlink{display:inline-flex}
+  .ctas{display:flex; align-items:center; gap:14px 22px; flex-wrap:wrap}
+  .dlbtn{display:inline-flex; align-items:center; gap:10px; text-decoration:none; border:0; cursor:pointer; background:var(--lime); color:#1b1747; font:600 15.5px/1.1 var(--body); padding:14px 18px;
+         clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:transform .2s ease, background .2s}
+  .dlbtn:hover{background:#d8f75c; transform:translateY(-1px)}
+  .dlbtn:focus-visible,.ghlink:focus-visible{outline:3px solid var(--coral); outline-offset:3px}
+  .dlbtn small{font:500 12px/1 var(--mono); opacity:.75}
+  .dlbtn.big{font-size:17px; padding:17px 22px}
+  .dlbtn.alt{background:rgba(255,255,255,.12); color:inherit}
+  .dlbtn.alt:hover{background:rgba(255,255,255,.2)}
+  .ghlink{color:var(--on-sky); font:600 15px/1 var(--body); text-underline-offset:4px}
+  .hero .formnote{margin-left:0}
+  .dl{display:grid; grid-template-columns:repeat(3,1fr); gap:22px 20px; margin-top:42px}
+  .dl .card{display:flex; flex-direction:column; gap:14px; min-height:0}
+  .dl .card h3{margin:0}
+  .dl .card .os{font:500 12px/1 var(--mono); color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase; display:flex; justify-content:space-between; gap:10px}
+  .dl .card .here{display:none; color:var(--lime)}
+  .dl .card.mine::after{background:var(--lime)}
+  .dl .card.mine .here{display:inline}
+  .dl .card .btns{display:flex; flex-direction:column; align-items:flex-start; gap:10px; margin-top:auto}
+  .dl .card ol{margin:0; padding-left:1.2em; color:var(--ink-2); font-size:15px; line-height:1.45}
+  .dl .card ol li+li{margin-top:4px}
+  .dlnote{margin:34px 0 0; max-width:46em; color:var(--ink-2); font-size:15.5px}
+  .dlnote a{color:var(--lime); text-underline-offset:3px}
+  .srcline{margin:22px 0 0; font-size:15px; color:var(--ink-2)}
+  .srcline a{color:var(--violet-ink); font-weight:600; text-underline-offset:3px}
+  footer a{color:inherit}
+  @media (max-width:880px){ .dl{grid-template-columns:minmax(0,1fr)} }
+  @media (max-width:1000px){ .cards{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:880px){
+    .hero-shell{--scene-h:clamp(390px, 104vw, 600px)}
+    .hero{grid-template-columns:minmax(0,1fr); padding:14px 0 calc(var(--scene-h) * .5); gap:16px}
+    .field{height:auto; margin:22px 0 calc(var(--scene-h) * -.1); display:flex; flex-direction:column; gap:14px}
+    .moment{position:relative; inset:auto; width:min(300px,86%)}
+    .m2{align-self:flex-end; right:auto; top:auto} .m3{left:auto; top:auto; margin-left:4%}
+    .cards.three,.local{grid-template-columns:minmax(0,1fr)}
+    .grove{justify-self:center; margin:10px auto 0; max-width:360px}
+    section{padding:64px 0}
+    .edge{height:70px} .edge.bottom{height:56px}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 20px}
+    .cards{grid-template-columns:minmax(0,1fr)}
+    .card{min-height:0} .card h3{margin-top:22px}
+    .join button{padding:14px 14px}
+    .join input[type=email]{padding:0 8px}
+    nav{padding:18px 0}
+    .badge{gap:16px; padding:16px 18px 16px 16px}
+    .mac{width:92px}
+    .cta{padding-top:84px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .moment{animation:none; opacity:1}
+    svg .tw{animation:none; opacity:.8; transform:none}
+    .Lsky .cl{animation:none !important}
+    .ly{transform:none !important}
+    .card,.card::after,.join::after{transition:none}
+    .grove{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero-shell print">
+  <svg class="scene" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><g class="ly Lsky" style="--k:0.3"><path class="sun2" d="M1010 404L1010 344L1036 350Z"/><path class="sun1" d="M1010 404L1036 350L1057 367Z"/><path class="sun2" d="M1010 404L1057 367L1068 391Z"/><path class="sun1" d="M1010 404L1068 391L1068 417Z"/><path class="sun2" d="M1010 404L1068 417L1057 441Z"/><path class="sun1" d="M1010 404L1057 441L1036 458Z"/><path class="sun2" d="M1010 404L1036 458L1010 464Z"/><path class="sun1" d="M1010 404L1010 464L984 458Z"/><path class="sun2" d="M1010 404L984 458L963 441Z"/><path class="sun1" d="M1010 404L963 441L952 417Z"/><path class="sun2" d="M1010 404L952 417L952 391Z"/><path class="sun1" d="M1010 404L952 391L963 367Z"/><path class="sun2" d="M1010 404L963 367L984 350Z"/><path class="sun1" d="M1010 404L984 350L1010 344Z"/><path class="cl" d="M80 300L133 289L196 291L251 286L298 283L354 284L420 300L267 306Z"/><path class="cl" d="M560 250L595 243L645 234L682 242L736 233L778 240L820 250L703 254Z"/><path class="cl" d="M980 214L1053 204L1114 199L1163 203L1230 188L1290 193L1360 214L1189 222Z"/><path class="cl" d="M1220 312L1266 301L1308 305L1341 303L1397 300L1433 298L1480 312L1363 317Z"/><g class="stars"><path class="tw" style="animation-delay:0s" d="M220 113L222.0 118.0L227 120L222.0 122.0L220 127L218.0 122.0L213 120L218.0 118.0Z"/><path class="tw" style="animation-delay:1.3s" d="M430 55L431.4 58.6L435 60L431.4 61.4L430 65L428.6 61.4L425 60L428.6 58.6Z"/><path class="tw" style="animation-delay:2.1s" d="M700 144L701.7 148.3L706 150L701.7 151.7L700 156L698.3 151.7L694 150L698.3 148.3Z"/><path class="tw" style="animation-delay:0.7s" d="M900 76L901.1 78.9L904 80L901.1 81.1L900 84L898.9 81.1L896 80L898.9 78.9Z"/><path class="tw" style="animation-delay:1.7s" d="M1180 133L1182.0 138.0L1187 140L1182.0 142.0L1180 147L1178.0 142.0L1173 140L1178.0 138.0Z"/><path class="tw" style="animation-delay:2.6s" d="M1330 55L1331.4 58.6L1335 60L1331.4 61.4L1330 65L1328.6 61.4L1325 60L1328.6 58.6Z"/><path class="tw" style="animation-delay:3.1s" d="M120 216L121.1 218.9L124 220L121.1 221.1L120 224L118.9 221.1L116 220L118.9 218.9Z"/></g></g><g class="ly Lfar" style="--k:0.22"><path class="b" d="M-80 920L-80 341L-2 367L43 414L125 442L192 368L254 398L326 409L399 439L508 363L582 383L654 407L832 342L900 422L1127 360L1187 385L1187 407L1236 398L1398 325L1459 360L1520 384L1520 920Z"/><path class="a" d="M192 368L157 439L223 417ZM192 368L254 398L223 417ZM254 398L326 409L223 417ZM399 439L336 443L488 409ZM654 407L647 434L780 398ZM654 407L832 342L780 398ZM1459 360L1520 384L1520 422ZM536 405L647 434L527 456ZM780 398L702 463L824 446ZM843 396L977 432L824 446ZM1443 398L1373 442L1520 463Z"/><path class="g" fill-opacity="0.10" d="M125 442L30 435L157 439ZM508 363L582 383L536 405ZM654 407L832 342L780 398ZM1127 360L977 432L1127 403ZM977 432L824 446L995 469ZM977 432L1127 403L995 469Z"/><path class="g" fill-opacity="0.15" d="M399 439L508 363L488 409ZM1187 407L1236 398L1201 435ZM1236 398L1398 325L1320 395ZM1398 325L1320 395L1443 398ZM488 409L351 476L527 456ZM647 434L780 398L702 463Z"/><path class="g" fill-opacity="0.21" d="M654 407L647 434L780 398ZM832 342L780 398L843 396ZM900 422L1127 360L977 432ZM157 439L68 480L196 462ZM1320 395L1147 464L1373 442ZM702 463L824 446L-80 920Z"/><path class="g" fill-opacity="0.27" d="M192 368L157 439L223 417ZM900 422L843 396L977 432ZM1236 398L1201 435L1320 395ZM157 439L223 417L196 462ZM780 398L702 463L824 446ZM780 398L843 396L824 446ZM1320 395L1443 398L1373 442Z"/><path class="g" fill-opacity="0.32" d="M125 442L192 368L157 439ZM399 439L336 443L488 409Z"/><path class="s" fill-opacity="0.10" d="M-80 341L-2 367L-80 386ZM582 383L536 405L647 434ZM832 342L900 422L843 396ZM843 396L977 432L824 446ZM1443 398L1373 442L1520 463Z"/><path class="s" fill-opacity="0.15" d="M-2 367L-80 386L30 435ZM254 398L326 409L223 417ZM326 409L399 439L336 443ZM1127 360L1187 385L1127 403ZM30 435L-80 453L68 480ZM488 409L536 405L527 456ZM1443 398L1520 422L1520 463ZM-80 453L68 480L-80 920ZM68 480L196 462L-80 920ZM351 476L527 456L-80 920ZM527 456L702 463L-80 920ZM824 446L995 469L-80 920Z"/><path class="s" fill-opacity="0.21" d="M508 363L488 409L536 405ZM582 383L654 407L647 434ZM1187 385L1187 407L1127 403ZM223 417L336 443L196 462ZM336 443L196 462L351 476ZM1127 403L1201 435L1147 464Z"/><path class="s" fill-opacity="0.27" d="M192 368L254 398L223 417ZM336 443L488 409L351 476Z"/><path class="s" fill-opacity="0.32" d="M-2 367L43 414L30 435ZM1373 442L1520 463L1520 920Z"/></g><g class="ly Lmid" style="--k:0.15"><path class="b" d="M-80 1000L-80 415L12 429L173 482L373 393L573 490L640 502L669 392L769 422L968 449L1139 387L1376 453L1520 400L1520 1000Z"/><path class="a" d="M12 429L173 482L159 501ZM173 482L159 501L233 480ZM769 422L593 512L837 457ZM159 501L-80 498L195 530ZM455 461L314 493L532 527ZM593 512L532 527L798 495ZM837 457L993 468L798 495ZM993 468L1104 433L1050 500ZM1104 433L1050 500L1342 507ZM1050 500L1342 507L1173 538ZM-80 549L340 544L-80 1000Z"/><path class="g" fill-opacity="0.10" d="M-80 415L12 429L-80 447ZM173 482L159 501L233 480ZM373 393L233 480L455 461ZM968 449L993 468L1104 433ZM968 449L1139 387L1104 433ZM1376 453L1358 475L1520 430ZM233 480L455 461L314 493ZM837 457L993 468L798 495ZM993 468L1104 433L1050 500ZM1358 475L1342 507L1520 480ZM798 495L1050 500L605 566Z"/><path class="g" fill-opacity="0.15" d="M1376 453L1520 400L1520 430ZM159 501L233 480L195 530ZM233 480L195 530L314 493ZM1342 507L1520 480L1520 534Z"/><path class="g" fill-opacity="0.21" d="M1358 475L1520 430L1520 480ZM314 493L-80 549L340 544Z"/><path class="g" fill-opacity="0.27" d="M173 482L373 393L233 480ZM593 512L532 527L798 495Z"/><path class="g" fill-opacity="0.32" d="M532 527L798 495L605 566Z"/><path class="s" fill-opacity="0.10" d="M573 490L640 502L593 512ZM769 422L968 449L837 457ZM-80 447L159 501L-80 498ZM1104 433L1050 500L1342 507ZM-80 498L195 530L-80 549ZM195 530L314 493L-80 549ZM1050 500L605 566L1173 538ZM1173 538L1520 534L1520 1000Z"/><path class="s" fill-opacity="0.15" d="M573 490L455 461L593 512ZM769 422L593 512L837 457ZM1139 387L1104 433L1358 475ZM1139 387L1376 453L1358 475ZM455 461L314 493L532 527ZM314 493L532 527L340 544ZM532 527L340 544L605 566Z"/><path class="s" fill-opacity="0.21" d="M455 461L593 512L532 527ZM593 512L837 457L798 495ZM-80 549L340 544L-80 1000Z"/><path class="s" fill-opacity="0.27" d="M1173 538L-80 1000L1520 1000Z"/><path class="s" fill-opacity="0.32" d="M605 566L1173 538L-80 1000Z"/></g><g class="ly Lnear" style="--k:0.09"><path class="b" d="M-80 1060L-80 498L202 516L367 478L448 490L567 538L642 564L823 477L1044 514L1304 485L1520 568L1520 1060Z"/><path class="a" d="M448 490L330 519L494 531ZM1044 514L933 524L1140 528ZM330 519L115 570L367 552ZM716 553L367 552L734 582ZM1140 528L955 566L1214 562ZM1275 516L1520 586L1520 608ZM1214 562L1212 608L1520 633Z"/><path class="g" fill-opacity="0.10" d="M-80 498L202 516L156 538ZM202 516L367 478L330 519ZM823 477L1044 514L933 524ZM1140 528L955 566L1214 562ZM252 609L799 610L-80 1060ZM799 610L1212 608L-80 1060Z"/><path class="g" fill-opacity="0.15" d="M-80 498L-80 525L156 538ZM367 478L448 490L330 519ZM823 477L716 553L933 524ZM1044 514L933 524L1140 528ZM1044 514L1140 528L1275 516ZM-80 525L-80 563L115 570Z"/><path class="g" fill-opacity="0.21" d="M955 566L1214 562L1212 608Z"/><path class="g" fill-opacity="0.27" d="M1044 514L1304 485L1275 516ZM115 570L367 552L252 609Z"/><path class="g" fill-opacity="0.32" d="M202 516L156 538L330 519ZM642 564L823 477L716 553ZM716 553L933 524L734 582Z"/><path class="s" fill-opacity="0.10" d="M156 538L330 519L115 570ZM-80 563L115 570L-80 611ZM115 570L-80 611L252 609ZM1214 562L1212 608L1520 633ZM-80 611L252 609L-80 1060Z"/><path class="s" fill-opacity="0.15" d="M448 490L330 519L494 531ZM448 490L567 538L494 531ZM1304 485L1520 568L1520 586ZM933 524L734 582L955 566ZM933 524L1140 528L955 566ZM1275 516L1214 562L1520 608Z"/><path class="s" fill-opacity="0.21" d="M494 531L716 553L367 552ZM367 552L734 582L252 609ZM734 582L252 609L799 610ZM1214 562L1520 608L1520 633Z"/><path class="s" fill-opacity="0.27" d="M567 538L642 564L494 531Z"/><path class="s" fill-opacity="0.32" d="M1212 608L-80 1060L1520 1060ZM1212 608L1520 633L1520 1060Z"/></g><g class="ly Lmeadow" style="--k:0.04"><path class="b" d="M-80 1120L-80 577L4 565L145 587L231 586L313 596L425 598L530 601L616 564L699 595L800 591L927 559L1037 558L1142 601L1203 595L1334 563L1430 563L1520 605L1520 1120Z"/><path class="a" d="M4 565L73 592L134 604ZM4 565L145 587L134 604ZM145 587L231 586L134 604ZM231 586L313 596L272 606ZM313 596L425 598L408 616ZM425 598L530 601L476 614ZM800 591L927 559L919 582ZM1142 601L1081 595L1197 613ZM1430 563L1391 581L1520 618ZM73 592L-80 619L102 627ZM134 604L272 606L237 626ZM476 614L373 634L541 637ZM619 585L541 637L673 629ZM619 585L733 611L673 629ZM733 611L826 600L784 635ZM826 600L919 582L784 635ZM919 582L1081 595L1077 622ZM1322 588L1247 627L1369 616ZM1391 581L1520 618L1369 616ZM373 634L146 656L376 661ZM373 634L541 637L376 661ZM541 637L376 661L579 653ZM673 629L579 653L774 661ZM784 635L774 661L952 642ZM-80 650L146 656L-80 683ZM1073 647L1275 654L919 678ZM255 686L522 690L-80 1120ZM522 690L919 678L-80 1120ZM1311 684L1520 693L1520 1120Z"/><path class="g" fill-opacity="0.10" d="M-80 577L4 565L-80 597ZM4 565L-80 597L73 592ZM4 565L73 592L134 604ZM4 565L145 587L134 604ZM530 601L616 564L476 614ZM800 591L733 611L826 600ZM800 591L826 600L919 582ZM919 582L1081 595L1077 622ZM1322 588L1247 627L1369 616ZM541 637L376 661L579 653ZM541 637L673 629L579 653ZM673 629L784 635L774 661ZM1247 627L1073 647L1275 654ZM1247 627L1369 616L1275 654ZM1275 654L1311 684L1520 693Z"/><path class="g" fill-opacity="0.15" d="M145 587L231 586L134 604ZM313 596L272 606L408 616ZM1037 558L919 582L1081 595ZM1334 563L1322 588L1391 581ZM733 611L826 600L784 635ZM1197 613L1077 622L1247 627ZM1391 581L1520 618L1369 616ZM774 661L952 642L919 678Z"/><path class="g" fill-opacity="0.21" d="M800 591L927 559L919 582ZM927 559L1037 558L919 582ZM1142 601L1203 595L1197 613ZM1203 595L1197 613L1322 588ZM-80 597L73 592L-80 619ZM476 614L619 585L541 637ZM826 600L919 582L784 635ZM919 582L784 635L985 608ZM-80 619L102 627L-80 650ZM784 635L774 661L952 642Z"/><path class="g" fill-opacity="0.27" d="M1203 595L1334 563L1322 588Z"/><path class="g" fill-opacity="0.32" d="M616 564L476 614L619 585ZM619 585L541 637L673 629Z"/><path class="s" fill-opacity="0.08" d="M231 586L134 604L272 606ZM272 606L408 616L373 634ZM733 611L673 629L784 635ZM1322 588L1391 581L1369 616ZM102 627L-80 650L146 656ZM102 627L237 626L146 656ZM985 608L952 642L1073 647ZM-80 650L146 656L-80 683ZM146 656L376 661L255 686ZM579 653L774 661L522 690ZM1275 654L919 678L1311 684ZM1275 654L1520 663L1520 693Z"/><path class="s" fill-opacity="0.12" d="M1430 563L1391 581L1520 618ZM73 592L134 604L102 627ZM272 606L237 626L373 634ZM476 614L373 634L541 637ZM919 582L985 608L1077 622ZM373 634L541 637L376 661ZM985 608L1077 622L1073 647ZM1077 622L1247 627L1073 647ZM1369 616L1520 641L1520 663ZM952 642L1073 647L919 678ZM-80 683L255 686L-80 1120ZM255 686L522 690L-80 1120Z"/><path class="s" fill-opacity="0.17" d="M1037 558L1142 601L1081 595ZM1142 601L1081 595L1197 613ZM1430 563L1520 605L1520 618ZM1081 595L1197 613L1077 622ZM146 656L-80 683L255 686ZM1073 647L1275 654L919 678ZM522 690L919 678L-80 1120Z"/><path class="s" fill-opacity="0.21" d="M699 595L619 585L733 611ZM1520 618L1369 616L1520 641ZM1311 684L-80 1120L1520 1120Z"/><path class="s" fill-opacity="0.26" d="M673 629L579 653L774 661ZM1311 684L1520 693L1520 1120Z"/><path class="pl" d="M463 596L470 552L471 596Z"/><path class="pd" d="M470 552L477 596L471 596Z"/><path class="pl" d="M485 596L492 550L493 596Z"/><path class="pd" d="M492 550L499 596L493 596Z"/><path class="pl" d="M502 596L508 556L509 596Z"/><path class="pd" d="M508 556L514 596L509 596Z"/><path class="pl" d="M1124 596L1130 557L1131 596Z"/><path class="pd" d="M1130 557L1136 596L1131 596Z"/><path class="pl" d="M1144 596L1150 560L1151 596Z"/><path class="pd" d="M1150 560L1156 596L1151 596Z"/><path class="pl" d="M1158 596L1166 544L1167 596Z"/><path class="pd" d="M1166 544L1174 596L1167 596Z"/><path class="pl" d="M1185 596L1190 562L1191 596Z"/><path class="pd" d="M1190 562L1195 596L1191 596Z"/><path class="pl" d="M325 596L330 566L331 596Z"/><path class="pd" d="M330 566L335 596L331 596Z"/><path class="pl" d="M347 596L352 563L353 596Z"/><path class="pd" d="M352 563L357 596L353 596Z"/><path class="rv" d="M811 581L756 601L836 601L687 612L576 669L692 641L503 653L383 699L307 759L453 881L477 821L537 771L748 715L632 631L693 656L848 623L764 591L813 587Z"/><path class="rvh" d="M811 581L756 601L812 584ZM836 601L687 612L842 612ZM576 669L692 641L604 650ZM503 653L383 699L520 712Z"/><path class="s" fill-opacity=".14" d="M764 591L848 623L842 612ZM693 656L632 631L604 650ZM748 715L537 771L520 712ZM477 821L453 881L380 820Z"/><g class="glints"><path class="tw" style="animation-delay:0.4s" d="M300 601L302.5 607.5L309 610L302.5 612.5L300 619L297.5 612.5L291 610L297.5 607.5Z"/><path class="tw" style="animation-delay:1.6s" d="M1010 630L1012.8 637.2L1020 640L1012.8 642.8L1010 650L1007.2 642.8L1000 640L1007.2 637.2Z"/><path class="tw" style="animation-delay:2.8s" d="M1180 593L1182.0 598.0L1187 600L1182.0 602.0L1180 607L1178.0 602.0L1173 600L1178.0 598.0Z"/><path class="tw" style="animation-delay:3.6s" d="M560 593L562.0 598.0L567 600L562.0 602.0L560 607L558.0 602.0L553 600L558.0 598.0Z"/></g></g><g class="ly Lfg" style="--k:0"><path class="pl" d="M1230 770L1300 300L1308 770Z"/><path class="pd" d="M1300 300L1370 770L1308 770Z"/><path class="pl" d="M1288 770L1372 210L1382 770Z"/><path class="pd" d="M1372 210L1456 770L1382 770Z"/><path class="pl" d="M1344 770L1440 130L1452 770Z"/><path class="pd" d="M1440 130L1536 770L1452 770Z"/><path class="pl" d="M1205 770L1250 470L1255 770Z"/><path class="pd" d="M1250 470L1295 770L1255 770Z"/><path class="pl" d="M1286 770L1340 410L1346 770Z"/><path class="pd" d="M1340 410L1394 770L1346 770Z"/><path class="pl" d="M-10 770L40 440L46 770Z"/><path class="pd" d="M40 440L90 770L46 770Z"/><path class="pl" d="M-83 770L-20 350L-12 770Z"/><path class="pd" d="M-20 350L43 770L-12 770Z"/><path class="pl" d="M77 770L110 550L114 770Z"/><path class="pd" d="M110 550L143 770L114 770Z"/><path class="b" d="M-80 1160L-80 737L0 717L115 712L185 728L281 713L371 726L472 709L567 714L648 726L738 715L799 711L913 727L971 715L1053 715L1168 724L1264 711L1360 743L1444 735L1520 739L1520 1160Z"/></g></svg>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="/" aria-label="Ambient home">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/>
+          <path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+          <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/>
+          <path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+          <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/>
+          <path fill="#c8e64a" d="M0 54L64 50V54L54 64H10L0 54Z"/>
+          <path fill="#62e6d8" d="M22 64L31 52H35L29 64Z"/>
+        </svg>Ambient</a>
+      <div class="navr"><a class="navlink" href="/teams/">For teams</a><a class="navlink gh" href="https://github.com/luqs1/ambient-ai" aria-label="Source on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>GitHub</span></a><a class="pill" href="#download">Download</a></div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Early alpha · macOS · Windows · Linux</div>
+        <h1>Proactive agents, <em>without</em> the surveillance.</h1>
+        <p class="lede">Local code and on-device classifiers decide when something’s worth acting on. Agents see one message, never your whole day.</p>
+        <div class="ctas">
+          <a class="dlbtn big" id="hero-dl" href="#download" data-os="">Download Ambient</a>
+          <a class="ghlink gh" href="https://github.com/luqs1/ambient-ai"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Read the source</a>
+        </div>
+        <p class="formnote" id="hero-dl-note">Free early build for macOS, Windows and Linux. Unsigned for now, <a href="#download" style="color:inherit">so your OS will ask first</a>.</p>
+      </div>
+      <div class="field" aria-hidden="true">
+        <div class="moment m1"><div class="src"><i style="background:var(--violet)"></i>Slack · Tofunmi</div><p>“Can you send the demo link?”</p><span class="chip">Matched on your device → Draft a reply</span></div>
+        <div class="moment m2 quiet"><div class="src"><i style="background:var(--violet)"></i>Slack · you</div><p>“haha nice”</p><span class="chip mute">No trigger · nothing sent</span></div>
+        <div class="moment m3"><div class="src"><i style="background:var(--river)"></i>GitHub · you</div><p>Opened a pull request</p><span class="chip">Matched → Summarise it for review</span></div>
+      </div>
+    </header>
+  </div>
+</div>
+
+<div class="wrap">
+  <section id="triggers" class="moments">
+    <div class="kicker"><b>Triggers</b></div>
+    <h2>Triggers in plain words.</h2>
+    <div class="cards">
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q1" d="M22 6L33 11L22 22Z"/><path class="q2" d="M33 11L38 22L22 22Z"/><path class="q1" d="M38 22L33 33L22 22Z"/><path class="q2" d="M33 33L22 38L22 22Z"/><path class="q1" d="M22 38L11 33L22 22Z"/><path class="q2" d="M11 33L6 22L22 22Z"/><path class="q1" d="M6 22L11 11L22 22Z"/><path class="q2" d="M11 11L22 6L22 22Z"/></svg><div class="n">01</div><h3>Say what matters</h3><p>“When I promise something in Slack, add it to my todos.”</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q4" d="M2 38L12 18L20 38Z"/><path class="q3" d="M12 38L22 8L32 38Z"/><path class="q8" d="M24 38L33 20L42 38Z"/><path class="q4" d="M22 8L22 38L12 38Z" opacity=".5"/></svg><div class="n">02</div><h3>Checked on your computer</h3><p>Plain code reads your apps. An offline model answers: does this match?</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q4" d="M4 40L22 12L23 40Z"/><path class="q3" d="M22 12L40 40L23 40Z"/><path class="q5" d="M22 2L25 7L22 12L19 7Z"/><path class="q5" d="M14 7L22 7L22 8Z"/></svg><div class="n">03</div><h3>Only matches leave</h3><p>One message, to the agent you chose. Nothing else.</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q7" d="M4 14L24 14L24 6L40 22L24 22Z"/><path class="q6" d="M4 30L24 30L24 38L40 22L24 22Z"/></svg><div class="n">04</div><h3>Admin, handled</h3><p>Follow-ups drafted, promises tracked, asks answered.</p></div>
+    </div>
+    <div class="flow" aria-hidden="true">
+      <span>“send the demo link?”</span><span class="arr">→</span><span>matches, on your device</span><span class="arr">→</span><span>Claude drafts the reply</span>
+    </div>
+  </section>
+</div>
+
+<div class="band-wrap">
+  <svg class="edge top" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><g class="ly Lband" style="--k:0"><path class="b" d="M-80 520L-80 17L25 75L206 23L275 46L333 68L389 84L448 30L597 50L665 61L747 16L807 32L829 76L881 95L955 41L1010 41L1117 78L1180 85L1237 18L1380 65L1520 17L1520 520Z"/><path class="g" fill-opacity="0.10" d="M275 46L333 68L272 75ZM597 50L665 61L657 86ZM955 41L1010 41L1000 72ZM657 86L749 56L-80 520ZM1000 72L1192 93L-80 520Z"/><path class="g" fill-opacity="0.15" d="M25 75L206 23L193 68ZM448 30L376 96L531 74ZM1380 65L1520 17L1520 61ZM193 68L272 75L-80 520ZM1390 88L1520 61L1520 520Z"/><path class="g" fill-opacity="0.21" d="M955 41L910 93L1000 72Z"/><path class="g" fill-opacity="0.27" d="M25 75L77 84L193 68ZM389 84L448 30L376 96ZM747 16L657 86L749 56ZM1380 65L1390 88L1520 61Z"/><path class="g" fill-opacity="0.32" d="M665 61L747 16L657 86ZM881 95L955 41L910 93ZM1180 85L1237 18L1192 93Z"/><path class="s" fill-opacity="0.10" d="M-80 17L25 75L-80 64ZM206 23L193 68L272 75ZM333 68L272 75L376 96ZM829 76L881 95L749 56ZM1117 78L1180 85L1000 72ZM1180 85L1000 72L1192 93ZM1237 18L1380 65L1293 70ZM272 75L376 96L-80 520ZM1192 93L1293 70L-80 520Z"/><path class="s" fill-opacity="0.15" d="M25 75L-80 64L77 84ZM807 32L829 76L749 56ZM-80 64L77 84L-80 520ZM749 56L910 93L-80 520ZM910 93L1000 72L-80 520ZM1390 88L-80 520L1520 520Z"/><path class="s" fill-opacity="0.21" d="M376 96L531 74L-80 520Z"/><path class="s" fill-opacity="0.27" d="M531 74L657 86L-80 520Z"/><path class="s" fill-opacity="0.32" d="M1293 70L1390 88L-80 520Z"/></g></svg>
+  <div class="band print">
+    <div class="wrap">
+      <section id="download">
+        <div class="kicker"><b>Download</b></div>
+        <h2>On macOS, Windows and Linux.</h2>
+        <div class="dl">
+          <div class="card" data-os="mac">
+            <div class="os"><span>macOS</span><span class="here">your system</span></div>
+            <h3>Apple silicon Macs</h3>
+            <ol>
+              <li>Open the .dmg and drag Ambient to Applications.</li>
+              <li>The first time, right-click Ambient → <b>Open</b>, then Open again.</li>
+              <li>Approve Ambient’s network extension when macOS asks.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="mac" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_aarch64.dmg">Download .dmg <small>Apple silicon</small></a></div>
+          </div>
+          <div class="card" data-os="win">
+            <div class="os"><span>Windows</span><span class="here">your system</span></div>
+            <h3>Windows, x64</h3>
+            <ol>
+              <li>If SmartScreen says “Windows protected your PC”, choose <b>More info → Run anyway</b>.</li>
+              <li>Windows asks for an administrator to install, and again when capture starts.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="win" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64-setup.exe">Download .exe <small>installer · x64</small></a><a class="dlbtn alt" data-dl="win-msi" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64_en-US.msi">.msi <small>for IT deployment</small></a></div>
+          </div>
+          <div class="card" data-os="linux">
+            <div class="os"><span>Linux</span><span class="here">your system</span></div>
+            <h3>Ubuntu, Debian</h3>
+            <ol>
+              <li>Install with <code>sudo apt install ./Ambient_0.1.0_amd64.deb</code>.</li>
+              <li>Setup asks for an administrator password once.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="linux" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_amd64.deb">Download .deb <small>x64</small></a></div>
+          </div>
+        </div>
+        <p class="dlnote">These are unsigned early builds, so each system warns you before the first run. To read your apps, Ambient adds its own certificate and captures network traffic on your device; your system asks you to confirm both. Every build comes from the public code: <a href="https://github.com/luqs1/ambient-ai">read the source on GitHub</a>.</p>
+      </section>
+    </div>
+  </div>
+  <svg class="edge bottom" viewBox="0 0 1440 90" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false"><g transform="translate(0 90) scale(1 -1)"><g class="ly Lband" style="--k:0"><path class="b" d="M-80 490L-80 14L30 23L145 24L288 40L394 60L491 35L580 52L690 30L811 49L946 37L1065 56L1210 30L1318 48L1419 63L1520 21L1520 490Z"/></g></g></svg>
+</div>
+
+<div class="wrap">
+  <section id="local">
+    <div class="local">
+      <div>
+        <div class="kicker"><b>On-device</b></div>
+        <h2>Local-first. Yours.</h2>
+        <p class="srcline">Don’t take our word for it. The code that reads your apps and checks your triggers is public, fair source (FSL-1.1, Apache 2.0 after two years). <a class="gh" href="https://github.com/luqs1/ambient-ai">Read the source →</a></p>
+        <div class="badge"><span class="mac" aria-hidden="true"><span class="screen"><svg class="mini" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><path class="sun2" d="M150 46L150 32L160 36Z"/><path class="sun1" d="M150 46L160 36L164 46Z"/><path class="sun2" d="M150 46L164 46L160 56Z"/><path class="sun1" d="M150 46L160 56L150 60Z"/><path class="sun2" d="M150 46L150 60L140 56Z"/><path class="sun1" d="M150 46L140 56L136 46Z"/><path class="sun2" d="M150 46L136 46L140 36Z"/><path class="sun1" d="M150 46L140 36L150 32Z"/><g class="ly Lfar" style="--k:0"><path class="b" d="M-80 492L-80 52L-50 58L-24 66L14 66L74 59L108 62L132 78L154 86L204 54L233 63L280 68L280 492Z"/><path class="a" d="M-80 52L-50 58L-80 68ZM14 66L39 76L69 72ZM154 86L138 86L160 87ZM154 86L204 54L160 87ZM233 63L160 87L242 76ZM233 63L242 76L280 77Z"/><path class="g" fill-opacity="0.10" d="M-50 58L-80 68L-26 77ZM14 66L74 59L69 72ZM108 62L132 78L69 72ZM132 78L154 86L138 86ZM154 86L138 86L160 87ZM233 63L160 87L242 76Z"/><path class="g" fill-opacity="0.15" d="M-80 52L-50 58L-80 68ZM-24 66L14 66L-26 77Z"/><path class="g" fill-opacity="0.32" d="M154 86L204 54L160 87ZM204 54L233 63L160 87Z"/><path class="s" fill-opacity="0.10" d="M-50 58L-24 66L-26 77ZM132 78L69 72L138 86ZM-80 68L-26 77L-80 492ZM-26 77L39 76L-80 492ZM39 76L69 72L-80 492ZM69 72L138 86L-80 492ZM138 86L160 87L-80 492ZM160 87L242 76L-80 492ZM242 76L280 77L280 492Z"/><path class="s" fill-opacity="0.32" d="M242 76L-80 492L280 492Z"/></g><g class="ly Lnear" style="--k:0"><path class="b" d="M-80 510L-80 80L-56 79L2 93L76 76L157 89L187 89L194 74L234 73L280 92L280 510Z"/><path class="a" d="M2 93L-33 96L32 95ZM234 73L280 92L280 100ZM216 89L-80 510L280 510Z"/><path class="g" fill-opacity="0.10" d="M76 76L157 89L98 93ZM157 89L98 93L161 99ZM157 89L187 89L161 99ZM187 89L194 74L161 99Z"/><path class="g" fill-opacity="0.15" d="M-56 79L-80 91L-33 96Z"/><path class="g" fill-opacity="0.21" d="M194 74L234 73L216 89Z"/><path class="g" fill-opacity="0.27" d="M76 76L32 95L98 93Z"/><path class="g" fill-opacity="0.32" d="M194 74L161 99L216 89Z"/><path class="s" fill-opacity="0.10" d="M234 73L216 89L280 100ZM98 93L161 99L-80 510Z"/><path class="s" fill-opacity="0.15" d="M-80 91L-33 96L-80 510ZM32 95L98 93L-80 510ZM161 99L216 89L-80 510Z"/><path class="s" fill-opacity="0.21" d="M-33 96L32 95L-80 510ZM216 89L280 100L280 510Z"/><path class="s" fill-opacity="0.32" d="M216 89L-80 510L280 510Z"/></g><g class="ly Lmeadow" style="--k:0"><path class="b" d="M-80 520L-80 103L-21 102L56 100L89 98L159 100L219 98L280 98L280 520Z"/><path class="a" d="M-21 102L56 100L26 108ZM89 98L159 100L126 108ZM159 100L219 98L184 109ZM184 109L-80 520L280 520ZM184 109L280 107L280 520Z"/><path class="g" fill-opacity="0.10" d="M-21 102L56 100L26 108ZM89 98L159 100L126 108ZM219 98L184 109L280 107Z"/><path class="g" fill-opacity="0.15" d="M-80 103L-21 102L-80 110Z"/><path class="g" fill-opacity="0.27" d="M-21 102L-80 110L26 108Z"/><path class="g" fill-opacity="0.32" d="M219 98L280 98L280 107Z"/><path class="s" fill-opacity="0.10" d="M159 100L126 108L184 109Z"/><path class="s" fill-opacity="0.15" d="M126 108L184 109L-80 520Z"/><path class="s" fill-opacity="0.21" d="M-80 110L26 108L-80 520ZM26 108L126 108L-80 520ZM184 109L280 107L280 520Z"/><path class="s" fill-opacity="0.32" d="M184 109L-80 520L280 520Z"/></g></svg></span><span class="base"></span></span><div>Every trigger is checked on your computer<small>macOS · Windows · Linux</small></div></div>
+      </div>
+      <svg class="grove" viewBox="0 0 520 500" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false"><g class="Lhill"><path class="rk1" d="M14 344L60 328L14 344Z"/><path class="s" fill-opacity="0.18" d="M14 344L60 328L14 344Z"/><path class="rk1" d="M60 328L120 318L14 344Z"/><path class="g" fill-opacity="0.15" d="M60 328L120 318L14 344Z"/><path class="rk1" d="M120 318L14 344L164 412Z"/><path class="s" fill-opacity="0.07" d="M120 318L14 344L164 412Z"/><path class="rk1" d="M120 318L190 306L164 412Z"/><path class="s" fill-opacity="0.08" d="M120 318L190 306L164 412Z"/><path class="rk1" d="M190 306L164 412L222 381Z"/><path class="g" fill-opacity="0.21" d="M190 306L164 412L222 381Z"/><path class="rk1" d="M190 306L260 301L222 381Z"/><path class="rk2" d="M260 301L222 381L286 412Z"/><path class="s" fill-opacity="0.09" d="M260 301L222 381L286 412Z"/><path class="rk2" d="M260 301L330 308L286 412Z"/><path class="g" fill-opacity="0.27" d="M260 301L330 308L286 412Z"/><path class="rk2" d="M330 308L286 412L374 399Z"/><path class="g" fill-opacity="0.24" d="M330 308L286 412L374 399Z"/><path class="rk2" d="M330 308L400 315L374 399Z"/><path class="s" fill-opacity="0.09" d="M330 308L400 315L374 399Z"/><path class="rk2" d="M400 315L460 334L374 399Z"/><path class="s" fill-opacity="0.19" d="M400 315L460 334L374 399Z"/><path class="rk2" d="M460 334L374 399L506 348Z"/><path class="s" fill-opacity="0.10" d="M460 334L374 399L506 348Z"/><path class="rk2" d="M460 334L506 348L506 348Z"/><path class="s" fill-opacity="0.15" d="M460 334L506 348L506 348Z"/><path class="rk1" d="M14 344L164 412L262 486Z"/><path class="rk1" d="M164 412L222 381L262 486Z"/><path class="s" fill-opacity="0.11" d="M164 412L222 381L262 486Z"/><path class="rk2" d="M222 381L286 412L262 486Z"/><path class="rk2" d="M286 412L374 399L262 486Z"/><path class="s" fill-opacity="0.08" d="M286 412L374 399L262 486Z"/><path class="rk2" d="M374 399L506 348L262 486Z"/><path class="s" fill-opacity="0.11" d="M374 399L506 348L262 486Z"/><path class="b" d="M14 318L60 300L120 290L190 284L260 281L330 284L400 292L460 304L506 320L506 348L460 334L400 315L330 308L260 301L190 306L120 318L60 328L14 344Z"/><path class="a" fill-opacity=".9" d="M14 318L60 300L14 344Z"/><path class="s" fill-opacity=".12" d="M60 300L60 328L14 344Z"/><path class="g" fill-opacity=".9" d="M60 300L120 290L60 328Z"/><path class="a" fill-opacity=".9" d="M120 290L190 284L120 318Z"/><path class="g" fill-opacity=".9" d="M190 284L260 281L190 306Z"/><path class="s" fill-opacity=".12" d="M260 281L260 301L190 306Z"/><path class="a" fill-opacity=".9" d="M260 281L330 284L260 301Z"/><path class="g" fill-opacity=".9" d="M330 284L400 292L330 308Z"/><path class="a" fill-opacity=".9" d="M400 292L460 304L400 315Z"/><path class="s" fill-opacity=".12" d="M460 304L460 334L400 315Z"/><path class="g" fill-opacity=".9" d="M460 304L506 320L460 334Z"/></g><g class="Lgrove"><path class="pl" d="M51 307L70 187L72 307Z"/><path class="pd" d="M70 187L89 307L72 307Z"/><path class="pl" d="M82 303L112 113L116 303Z"/><path class="pd" d="M112 113L142 303L116 303Z"/><path class="pl" d="M132 295L156 145L159 295Z"/><path class="pd" d="M156 145L180 295L159 295Z"/><path class="pl" d="M166 297L206 47L211 297Z"/><path class="pd" d="M206 47L246 297L211 297Z"/><path class="pl" d="M229 296L258 116L261 296Z"/><path class="pd" d="M258 116L287 296L261 296Z"/><path class="pl" d="M283 295L318 75L322 295Z"/><path class="pd" d="M318 75L353 295L322 295Z"/><path class="pl" d="M342 292L366 142L369 292Z"/><path class="pd" d="M366 142L390 292L369 292Z"/><path class="pl" d="M382 306L412 120L416 306Z"/><path class="pd" d="M412 120L442 306L416 306Z"/><path class="pl" d="M437 308L456 190L458 308Z"/><path class="pd" d="M456 190L475 308L458 308Z"/></g><g class="glints"><path class="tw" style="animation-delay:0.3s" d="M300 62L302.2 67.8L308 70L302.2 72.2L300 78L297.8 72.2L292 70L297.8 67.8Z"/><path class="tw" style="animation-delay:1.9s" d="M130 54L131.7 58.3L136 60L131.7 61.7L130 66L128.3 61.7L124 60L128.3 58.3Z"/><path class="tw" style="animation-delay:3.1s" d="M470 195L471.4 198.6L475 200L471.4 201.4L470 205L468.6 201.4L465 200L468.6 198.6Z"/></g></svg>
+    </div>
+  </section>
+</div>
+
+<div class="cta print" id="join-bottom">
+  <svg class="edge paper" viewBox="0 0 1440 80" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false"><g transform="translate(0 80) scale(1 -1)"><g class="ly Lfg" style="--k:0"><path class="b" d="M-80 480L-80 30L1 55L128 36L232 53L331 17L450 16L498 19L615 43L698 18L818 53L894 55L1005 54L1103 56L1249 59L1329 58L1437 11L1520 35L1520 480Z"/></g></g></svg>
+  <svg class="scene" viewBox="0 0 1440 460" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><path class="moon2" d="M1080 190L1080 138L1111 148Z"/><path class="moon1" d="M1080 190L1111 148L1129 174Z"/><path class="moon2" d="M1080 190L1129 174L1129 206Z"/><path class="moon1" d="M1080 190L1129 206L1111 232Z"/><path class="moon2" d="M1080 190L1111 232L1080 242Z"/><path class="moon1" d="M1080 190L1080 242L1049 232Z"/><path class="moon2" d="M1080 190L1049 232L1031 206Z"/><path class="moon1" d="M1080 190L1031 206L1031 174Z"/><path class="moon2" d="M1080 190L1031 174L1049 148Z"/><path class="moon1" d="M1080 190L1049 148L1080 138Z"/><g class="stars"><path class="tw" style="animation-delay:0s" d="M180 64L181.7 68.3L186 70L181.7 71.7L180 76L178.3 71.7L174 70L178.3 68.3Z"/><path class="tw" style="animation-delay:1.1s" d="M380 136L381.1 138.9L384 140L381.1 141.1L380 144L378.9 141.1L376 140L378.9 138.9Z"/><path class="tw" style="animation-delay:2.2s" d="M640 45L641.4 48.6L645 50L641.4 51.4L640 55L638.6 51.4L635 50L638.6 48.6Z"/><path class="tw" style="animation-delay:0.5s" d="M820 116L821.1 118.9L824 120L821.1 121.1L820 124L818.9 121.1L816 120L818.9 118.9Z"/><path class="tw" style="animation-delay:1.8s" d="M1260 84L1261.7 88.3L1266 90L1261.7 91.7L1260 96L1258.3 91.7L1254 90L1258.3 88.3Z"/><path class="tw" style="animation-delay:2.9s" d="M1380 166L1381.1 168.9L1384 170L1381.1 171.1L1380 174L1378.9 171.1L1376 170L1378.9 168.9Z"/></g><g class="ly Lfar" style="--k:0"><path class="b" d="M-80 740L-80 214L14 246L77 273L135 276L258 199L359 250L444 256L557 204L711 250L773 245L911 219L1077 260L1145 268L1216 190L1290 196L1314 275L1389 272L1520 191L1520 740Z"/><path class="a" d="M14 246L77 273L6 265ZM258 199L359 250L277 243ZM444 256L557 204L410 275ZM911 219L1077 260L1014 272ZM1314 275L1389 272L1241 232ZM277 243L410 275L305 297ZM1241 232L1421 277L1287 280ZM1421 277L1287 280L1520 285ZM1421 277L1520 233L1520 285ZM933 294L1188 291L-80 740ZM1188 291L1287 280L-80 740Z"/><path class="g" fill-opacity="0.10" d="M711 250L773 245L690 270ZM773 245L690 270L797 262ZM1389 272L1421 277L1520 233ZM869 251L857 294L933 294ZM1241 232L1421 277L1287 280ZM1421 277L1520 233L1520 285ZM586 294L857 294L-80 740ZM1188 291L1287 280L-80 740ZM1287 280L1520 285L1520 740Z"/><path class="g" fill-opacity="0.15" d="M773 245L797 262L869 251ZM1314 275L1389 272L1241 232ZM1389 272L1520 191L1520 233ZM182 272L277 243L58 312ZM277 243L58 312L305 297ZM1421 277L1287 280L1520 285ZM305 297L447 309L-80 740Z"/><path class="g" fill-opacity="0.21" d="M1145 268L1216 190L1183 258ZM410 275L568 239L447 309ZM568 239L447 309L586 294ZM1183 258L1241 232L1188 291Z"/><path class="g" fill-opacity="0.27" d="M258 199L182 272L277 243ZM444 256L557 204L410 275Z"/><path class="g" fill-opacity="0.32" d="M135 276L258 199L182 272ZM1216 190L1183 258L1241 232Z"/><path class="s" fill-opacity="0.10" d="M135 276L6 265L182 272ZM557 204L568 239L690 270ZM1216 190L1290 196L1241 232ZM6 265L182 272L58 312ZM690 270L797 262L586 294ZM1014 272L1183 258L933 294ZM1241 232L1188 291L1287 280ZM58 312L305 297L-80 740ZM1287 280L-80 740L1520 740Z"/><path class="s" fill-opacity="0.15" d="M911 219L869 251L1014 272ZM568 239L690 270L586 294ZM869 251L1014 272L933 294Z"/><path class="s" fill-opacity="0.21" d="M-80 214L-80 243L6 265ZM14 246L77 273L6 265ZM77 273L135 276L6 265ZM258 199L359 250L277 243ZM-80 243L6 265L-80 286ZM6 265L-80 286L58 312ZM277 243L410 275L305 297ZM933 294L1188 291L-80 740Z"/><path class="s" fill-opacity="0.27" d="M359 250L277 243L410 275ZM857 294L933 294L-80 740Z"/><path class="s" fill-opacity="0.32" d="M-80 286L58 312L-80 740ZM447 309L586 294L-80 740Z"/></g><g class="ly Lmid" style="--k:0"><path class="b" d="M-80 800L-80 287L-6 308L107 320L218 348L351 285L413 289L568 316L637 314L713 285L951 329L1058 329L1123 251L1275 322L1520 274L1520 800Z"/><path class="a" d="M107 320L218 348L65 339ZM218 348L65 339L289 337ZM413 289L289 337L454 325ZM413 289L454 325L510 331ZM637 314L510 331L674 326ZM637 314L713 285L674 326ZM951 329L866 338L989 350ZM1058 329L1123 251L989 350ZM1275 322L1149 293L1304 335ZM1275 322L1520 274L1520 311ZM65 339L289 337L215 378ZM407 358L642 363L-80 800ZM1092 353L1275 370L-80 800ZM1275 370L-80 800L1520 800Z"/><path class="g" fill-opacity="0.10" d="M-6 308L-80 317L65 339ZM351 285L413 289L289 337ZM568 316L637 314L510 331ZM637 314L510 331L674 326ZM637 314L713 285L674 326ZM713 285L674 326L866 338ZM289 337L215 378L407 358ZM866 338L989 350L910 370ZM989 350L910 370L1092 353ZM407 358L642 363L-80 800ZM1275 370L1520 350L1520 800Z"/><path class="g" fill-opacity="0.15" d="M1275 322L1304 335L1520 311ZM510 331L674 326L642 363ZM1304 335L1275 370L1520 350ZM1304 335L1520 311L1520 350Z"/><path class="g" fill-opacity="0.21" d="M218 348L351 285L289 337ZM1123 251L989 350L1149 293ZM1275 322L1520 274L1520 311Z"/><path class="g" fill-opacity="0.32" d="M989 350L1149 293L1092 353Z"/><path class="s" fill-opacity="0.10" d="M-80 287L-6 308L-80 317ZM413 289L568 316L510 331ZM713 285L951 329L866 338ZM1058 329L1123 251L989 350ZM1123 251L1275 322L1149 293ZM-80 317L65 339L-80 358ZM866 338L642 363L910 370ZM1149 293L1092 353L1275 370Z"/><path class="s" fill-opacity="0.15" d="M218 348L65 339L289 337ZM413 289L289 337L454 325ZM951 329L866 338L989 350ZM289 337L454 325L407 358Z"/><path class="s" fill-opacity="0.21" d="M1275 322L1149 293L1304 335ZM642 363L910 370L-80 800Z"/><path class="s" fill-opacity="0.27" d="M1149 293L1304 335L1275 370ZM1092 353L1275 370L-80 800Z"/><path class="s" fill-opacity="0.32" d="M-80 358L215 378L-80 800ZM215 378L407 358L-80 800ZM1275 370L-80 800L1520 800Z"/></g><g class="ly Lnear" style="--k:0"><path class="b" d="M-80 840L-80 346L71 371L245 321L334 343L494 355L554 368L621 347L821 380L922 402L1021 342L1077 347L1188 362L1380 340L1442 359L1520 361L1520 840Z"/><path class="a" d="M922 402L1021 342L925 411ZM1021 342L1077 347L925 411ZM1520 361L1354 366L1520 380ZM-80 405L101 412L-80 840ZM101 412L380 401L-80 840ZM1094 401L1241 406L-80 840Z"/><path class="g" fill-opacity="0.10" d="M71 371L-80 369L92 385ZM334 343L184 367L338 367ZM1077 347L925 411L1131 373ZM1188 362L1259 376L1354 366ZM92 385L184 367L101 412ZM600 376L791 393L651 405ZM1354 366L1520 380L1520 408Z"/><path class="g" fill-opacity="0.15" d="M922 402L791 393L925 411ZM1021 342L1077 347L925 411ZM1520 361L1354 366L1520 380ZM338 367L496 379L380 401ZM1259 376L1354 366L1241 406Z"/><path class="g" fill-opacity="0.21" d="M71 371L245 321L184 367ZM494 355L338 367L496 379ZM1188 362L1380 340L1354 366Z"/><path class="g" fill-opacity="0.27" d="M71 371L92 385L184 367ZM554 368L621 347L600 376ZM184 367L338 367L101 412Z"/><path class="g" fill-opacity="0.32" d="M922 402L1021 342L925 411ZM925 411L896 421L1094 401Z"/><path class="s" fill-opacity="0.10" d="M-80 346L71 371L-80 369ZM494 355L554 368L496 379ZM621 347L600 376L791 393ZM821 380L922 402L791 393ZM1077 347L1188 362L1131 373ZM1442 359L1520 361L1354 366ZM-80 369L92 385L-80 405ZM92 385L-80 405L101 412ZM338 367L101 412L380 401ZM600 376L380 401L651 405ZM791 393L651 405L896 421ZM925 411L1131 373L1094 401ZM1131 373L1094 401L1241 406ZM651 405L896 421L-80 840ZM896 421L1094 401L-80 840ZM1094 401L1241 406L-80 840ZM1241 406L1520 408L1520 840Z"/><path class="s" fill-opacity="0.15" d="M380 401L651 405L-80 840Z"/><path class="s" fill-opacity="0.21" d="M-80 405L101 412L-80 840Z"/><path class="s" fill-opacity="0.32" d="M1241 406L-80 840L1520 840Z"/><path class="pl" d="M46 426L60 337L62 426Z"/><path class="pd" d="M60 337L74 426L62 426Z"/><path class="pl" d="M78 426L96 312L98 426Z"/><path class="pd" d="M96 312L114 426L98 426Z"/><path class="pl" d="M104 426L120 326L122 426Z"/><path class="pd" d="M120 326L136 426L122 426Z"/><path class="pl" d="M131 426L150 308L152 426Z"/><path class="pd" d="M150 308L169 426L152 426Z"/><path class="pl" d="M1271 426L1290 306L1292 426Z"/><path class="pd" d="M1290 306L1309 426L1292 426Z"/><path class="pl" d="M1308 426L1320 351L1321 426Z"/><path class="pd" d="M1320 351L1332 426L1321 426Z"/><path class="pl" d="M1339 426L1350 355L1351 426Z"/><path class="pd" d="M1350 355L1361 426L1351 426Z"/><path class="pl" d="M1362 426L1384 289L1387 426Z"/><path class="pd" d="M1384 289L1406 426L1387 426Z"/><path class="pl" d="M1395 426L1410 335L1412 426Z"/><path class="pd" d="M1410 335L1425 426L1412 426Z"/></g><g class="ly Lfoot" style="--k:0"><path class="b" d="M-80 860L-80 440L-6 433L98 430L160 450L220 442L326 431L394 445L478 446L544 435L621 441L740 443L813 438L892 432L950 445L1051 439L1100 436L1186 436L1295 434L1379 449L1419 438L1520 441L1520 860Z"/></g></svg>
+  <div class="wrap">
+    <div class="kicker"><b>Early alpha</b></div>
+    <h2>Proactive agents, on your terms.</h2>
+    <div class="ctas" style="justify-content:center; margin:0 0 28px"><a class="dlbtn big" id="cta-dl" href="#download" data-os="">Download Ambient</a></div>
+    <p class="formnote" style="margin:0 0 14px">Or get new builds by email:</p>
+    <div class="signup" data-source="footer">
+      <form class="join" novalidate>
+        <input type="email" name="email" placeholder="you@anything.com" autocomplete="email" required aria-label="Email">
+        <label class="hp" aria-hidden="true">Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label>
+        <button type="submit">Email me builds</button>
+      </form>
+      <div class="formnote" role="status"></div>
+      <div class="done">You’re on the list. We’ll email you new builds.</div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="wrap">
+    <footer><span>Ambient · early alpha · <a href="/teams/">for teams</a> · <a href="https://github.com/luqs1/ambient-ai">GitHub</a> (fair source)</span><span>Local-first by design.</span></footer>
+  </div>
+</div>
+
+<script>
+  const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
+  function markJoined() { document.querySelectorAll(".signup").forEach(s => s.classList.add("joined")); }
+  document.querySelectorAll(".signup").forEach(box => {
+    const form = box.querySelector("form"), note = box.querySelector(".formnote"), btn = form.querySelector("button");
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const email = form.email.value.trim();
+      note.classList.remove("err"); note.textContent = "";
+      if (!EMAIL_RE.test(email)) { note.textContent = "That email doesn’t look right."; note.classList.add("err"); return; }
+      btn.disabled = true; btn.textContent = "Joining…";
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, company: form.company.value, team_size: form.team_size ? form.team_size.value : null, source: box.dataset.source, referrer: document.referrer || null })
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok || !out.ok) throw new Error(out.error || "failed");
+        try { posthog.identify(email.toLowerCase(), { email: email.toLowerCase() }); posthog.capture("waitlist_submitted", { source: box.dataset.source }); } catch (_) {}
+        markJoined();
+      } catch (e) {
+        note.textContent = e.message === "invalid_email" ? "That email doesn’t look right." : "Something went wrong. Try again?";
+        note.classList.add("err");
+      } finally { btn.disabled = false; btn.textContent = "Email me builds"; }
+    });
+  });
+
+  // Download: highlight the visitor's system; every option stays visible.
+  (() => {
+    const ua = navigator.userAgent || "", plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+    const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    const os = mobile ? "" : /Win/i.test(plat + ua) ? "win" : /Mac/i.test(plat + ua) ? "mac" : /Linux|X11|CrOS/i.test(plat + ua) ? "linux" : "";
+    const names = { mac: "macOS", win: "Windows", linux: "Linux" };
+    if (!os) return;
+    const card = document.querySelector('.dl .card[data-os="' + os + '"]');
+    const file = card && card.querySelector(".dlbtn");
+    if (!card || !file) return;
+    card.classList.add("mine");
+    document.querySelectorAll("#hero-dl, #cta-dl").forEach(b => { b.href = file.href; b.textContent = "Download for " + names[os]; b.dataset.os = os; });
+  })();
+  document.querySelectorAll("a.dlbtn").forEach(a => a.addEventListener("click", () => {
+    try { posthog.capture("download_clicked", { os: a.dataset.dl || a.dataset.os || "section" }); } catch (_) {}
+  }));
+
+  // Parallax: ridges drift apart as you scroll; a little sway with the pointer.
+  (() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const scene = document.querySelector(".hero-shell .scene");
+    if (!scene) return;
+    let sy = 0, mx = 0, tmx = 0, raf = 0;
+    const tick = () => {
+      raf = 0;
+      mx += (tmx - mx) * .08;
+      scene.style.setProperty("--sy", sy.toFixed(1));
+      scene.style.setProperty("--mx", mx.toFixed(3));
+      if (Math.abs(tmx - mx) > .002) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    addEventListener("scroll", () => { sy = Math.min(scrollY, innerHeight * 1.5); kick(); }, { passive: true });
+    if (matchMedia("(pointer: fine)").matches) {
+      addEventListener("pointermove", e => { if (scrollY < innerHeight) { tmx = (e.clientX / innerWidth - .5) * 2; kick(); } }, { passive: true });
+    }
+  })();
+</script>
+</body>
+</html>

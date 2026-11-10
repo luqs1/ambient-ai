@@ -1,0 +1,37 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+data/
+.venv/
+__pycache__/
+app/node_modules/
+app/src-tauri/target/
+app/src-tauri/binaries/
+
+# Never commit: captured traffic, local databases, secrets
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+.env
+.env.*
+*.pem
+*.key
+# test-VM SSH keypair + VM passwords (see docs/test-vms.md)
+packaging/vm/keys/
+# early WhatsApp experiment: vendored third-party code (MPL) + possible session keys; out of scope
+whatsapp/
+# tooling output
+site/.wrangler/
+site/node_modules/
+app/src-tauri/gen/
+.DS_Store
+# installers copied out of the test VMs
+dist-vm/

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Ambient</vendor>
+  <vendor_url>https://tryambient.app</vendor_url>
+  <action id="dev.ambient.desktop.setup">
+    <description>Let Ambient read app traffic on this computer</description>
+    <message>Ambient wants to trust its own certificate on this computer and let your account see app traffic. An administrator has to allow this once.</message>
+    <icon_name>ambient</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/ambient/ambient-setup</annotate>
+  </action>
+</policyconfig>

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# create-vm win|lin: build a fresh disk and install media for one VM, then boot it.
+# Expects setup-box (on the Mac) to have put the rendered answer files in win/unattend/ or lin/seed/.
+# Refuses to overwrite an existing disk unless FORCE=1.
+set -euo pipefail
+name=${1:?usage: create-vm win|lin}
+root=${AMBIENT_VMS:-$HOME/ambient-vms}
+d=$root/$name
+source "$root/vm.conf"
+mkdir -p "$root"/{iso,shots,logs} "$d"
+
+if [ -f "$d/disk.qcow2" ] && [ "${FORCE:-0}" != 1 ]; then
+  echo "$d/disk.qcow2 already exists; run with FORCE=1 to wipe and rebuild" >&2; exit 1
+fi
+command -v genisoimage >/dev/null || sudo -n apt-get install -y genisoimage
+if [ ! -f /etc/systemd/system/ambient-vm@.service ] || ! cmp -s "$root/bin/ambient-vm@.service" /etc/systemd/system/ambient-vm@.service; then
+  sudo -n install -m 644 "$root/bin/ambient-vm@.service" /etc/systemd/system/ambient-vm@.service
+  sudo -n systemctl daemon-reload
+fi
+sudo -n systemctl stop "ambient-vm@$name" 2>/dev/null || true
+rm -f "$d/disk.qcow2"
+
+case "$name" in
+lin)
+  img=$root/iso/noble-cloudimg.img
+  [ -f "$img" ] || curl -L --fail --retry 5 -o "$img" "$LIN_IMG_URL"
+  qemu-img convert -O qcow2 "$img" "$d/disk.qcow2"
+  qemu-img resize "$d/disk.qcow2" "$DISK_SIZE"
+  printf 'instance-id: ambient-lin-%s\nlocal-hostname: ambient-lin\n' "$(date +%s)" > "$d/seed/meta-data"
+  genisoimage -quiet -output "$d/seed.iso" -volid cidata -joliet -rock "$d/seed/user-data" "$d/seed/meta-data"
+  : > "$d/serial.log"
+  sudo -n systemctl start "ambient-vm@$name"
+  ;;
+win)
+  iso=$root/iso/win11-eval.iso
+  [ -f "$iso" ] || curl -L --fail --retry 5 -o "$iso" "$WIN_ISO_URL"
+  qemu-img create -q -f qcow2 "$d/disk.qcow2" "$DISK_SIZE"
+  cp /usr/share/OVMF/OVMF_VARS_4M.fd "$d/OVMF_VARS.fd"
+  genisoimage -quiet -o "$d/unattend.iso" -J -r -V AMBIENT "$d/unattend"
+  chmod 600 "$d/unattend.iso"
+  sudo -n systemctl start "ambient-vm@$name"
+  # The install DVD shows "Press any key to boot from CD or DVD" for a few seconds; press Enter for it.
+  for i in $(seq 1 30); do "$root/bin/vmctl" keys win ret 2>/dev/null || true; sleep 0.5; done
+  ;;
+esac
+"$root/bin/vmctl" status "$name"

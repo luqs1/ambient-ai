@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# win-gui [-e] <program> [args...]: start a program on the Windows VM's visible desktop (the auto-logged-on session).
+# A program started straight from win-exec has no desktop, so windows and tray icons never appear; this goes through
+# a scheduled task that runs in the interactive session. -e runs it elevated. Example: win-gui notepad.exe
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+level=Limited; if [ "${1:-}" = "-e" ]; then level=Highest; shift; fi
+[ $# -ge 1 ] || { echo "usage: win-gui [-e] <program> [args...]" >&2; exit 2; }
+exe=$1; shift; args="$*"
+b64() { printf '%s' "$1" | base64 | tr -d '\n'; }
+vm_exec win "powershell -NoProfile -Command -" <<PS
+\$exe = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('$(b64 "$exe")'))
+\$arg = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('$(b64 "$args")'))
+\$a = if (\$arg) { New-ScheduledTaskAction -Execute \$exe -Argument \$arg } else { New-ScheduledTaskAction -Execute \$exe }
+\$p = New-ScheduledTaskPrincipal -UserId \$env:USERNAME -LogonType Interactive -RunLevel $level
+Register-ScheduledTask -TaskName AmbientGui -Action \$a -Principal \$p -Force | Out-Null
+Start-ScheduledTask -TaskName AmbientGui
+
+PS

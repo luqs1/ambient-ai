@@ -1,0 +1,18 @@
+#cloud-config
+hostname: ambient-lin
+manage_etc_hosts: true
+ssh_pwauth: false
+users:
+  - name: @LIN_USER@
+    gecos: Ambient Test
+    shell: /bin/bash
+    groups: [adm, sudo, video, plugdev]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: false
+    passwd: "@LIN_PASSWORD_HASH@"
+    ssh_authorized_keys:
+      - @SSH_PUBKEY@
+growpart:
+  mode: auto
+  devices: ["/"]
+timezone: Europe/London

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# win-shot [out.png]: save a PNG of the Windows VM screen on this Mac and print its path.
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+vm_shot win "${1:-}"

@@ -1,0 +1,18 @@
+[project]
+name = "ambient"
+version = "0.1.0"
+description = "Ambient: proactive agent triggers checked on your Mac, and Veil secret redaction"
+requires-python = ">=3.13"
+dependencies = [
+    "huggingface-hub>=2.4.0",
+    "mitmproxy>=12.3.1",
+    "onnxruntime>=1.31.1",
+    "psutil>=7.2.2",
+    "tokenizers>=0.23.3",
+    "zstandard>=0.25.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambient · proactive agents, on your terms</title>
+<meta name="description" content="Write triggers in plain words. Local code and offline classifiers on your computer decide when an agent should act, so agents see one message, never your whole day. Early alpha for macOS, Windows and Linux. Fair source.">
+<meta name="theme-color" content="#2b27c9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0c3d" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Ambient">
+<meta property="og:description" content="Proactive agents, without the surveillance.">
+<meta property="og:image" content="https://tryambient.app/assets/icon-256.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Ambient","url":"https://tryambient.app/",
+ "description":"Proactive agent triggers in plain words, checked on your own computer.",
+ "applicationCategory":"ProductivityApplication","operatingSystem":"macOS, Windows, Linux","softwareVersion":"0.1.0",
+ "downloadUrl":["https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_aarch64.dmg","https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64-setup.exe","https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_amd64.deb"],
+ "sameAs":["https://github.com/luqs1/ambient-ai"]}
+</script>
+<link rel="preload" href="/assets/fonts/YoungSerif-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init("phc_WYptPe3ouS3hMDDMFp28qGbI9UcbyZOM6aO8IYMvVBn", {
+    api_host: "https://eu.i.posthog.com",
+    persistence: "memory",          // no cookies, no banner
+    person_profiles: "identified_only"
+  });
+</script>
+<style>
+  /* ── Palette: riso inks on cream stock. Day by default, dusk in dark mode. ── */
+  :root{
+    --paper:#f7f0dc; --card:#fffaee; --chip:#ece4cb;
+    --ink:#1b1747; --ink-2:#4a4577; --ink-3:#7a76a3;
+    --deep:#1b1747;
+    --ultra:#2b27c9; --violet:#6a4fd0; --violet-ink:#5638c4; --lime:#c9ec3f; --coral:#ff6f59; --coral-ink:#c23a26; --peach:#ffc6a0; --aqua:#62e6d8; --teal-ink:#0e6b66;
+    --on-sky:#fbf4e2; --on-sky-2:rgba(251,244,226,.84);
+    /* sky */
+    --sky-a:#2420b8; --sky-b:#2d4fd0; --sky-c:#1e86b0; --sky-d:#f3ad95;
+    /* terrain inks */
+    --far:#b6a7f0; --far-2:#f0a9c0; --mid:#6a4fd0; --mid-2:#4f74d8; --near:#3a2c9c; --near-2:#2a5f93;
+    --meadow:#c8e64a; --meadow-2:#8dd05a; --river:#62e6d8; --river-hi:#e6fff8;
+    --pine-l:#3c8a76; --pine-d:#1e3a6e;
+    --glint:#ffd8b0; --shade:#1b1747; --sun-1:#ffb18c; --sun-2:#ff9473; --cloud:#ffd3c4; --spark:#fff6dc;
+    --band:#2a2290; --foot:#1b1747;
+    --offset:var(--violet);
+    --chip-lime:#e6f6a3; --chip-lime-ink:#2c3a07; --chip-coral:#ffd8cd; --chip-coral-ink:#a3301f; --chip-aqua:#c9f6ef;
+    --display:"Young Serif", "Iowan Old Style", Georgia, serif;
+    --body:"Schibsted Grotesk", ui-sans-serif, -apple-system, sans-serif;
+    --mono:"Spline Sans Mono", ui-monospace, Menlo, monospace;
+    --cut:16px;
+    --grain-o:.28;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#13113a; --card:#1e1a55; --chip:#28236a;
+      --ink:#f7f0dc; --ink-2:#c7c1ea; --ink-3:#928cc4;
+      --violet-ink:#b9a8ff; --coral-ink:#ff9a86; --teal-ink:#7ff0e3;
+      --sky-a:#0b0a33; --sky-b:#1a1f72; --sky-c:#1d4f86; --sky-d:#a8607e;
+      --far:#5b4bb0; --far-2:#8a4f8e; --mid:#3b2c92; --mid-2:#2c3f8e; --near:#231a63; --near-2:#173d63;
+      --meadow:#7f9c2a; --meadow-2:#4c8a4c; --river:#3fcfc4; --river-hi:#b8fff2;
+      --pine-l:#23615a; --pine-d:#0f1b45;
+      --glint:#ffb48a; --shade:#05041a; --sun-1:#fff0c8; --sun-2:#ffe2ae; --cloud:#c08aa8; --spark:#fff6dc;
+      --band:#1d1764; --foot:#08071f;
+      --offset:#4a37c0;
+      --chip-lime:rgba(201,236,63,.15); --chip-lime-ink:#d8f56a; --chip-coral:rgba(255,111,89,.18); --chip-coral-ink:#ffa08c; --chip-aqua:rgba(98,230,216,.14);
+      --grain-o:.22;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; background:var(--paper)}
+  body{margin:0; color:var(--ink); background:var(--paper); font:17px/1.55 var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip}
+  /* fine riso grain over everything */
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:var(--grain-o); mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .08  0 0 0 0 .25  2.6 0 0 0 -1.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark){
+    body::after{mix-blend-mode:screen;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 .95  0 0 0 0 .85  2.6 0 0 0 -1.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  }
+  /* uneven ink density on the printed art */
+  .print{position:relative; isolation:isolate}
+  .print::after{
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:1; mix-blend-mode:soft-light; opacity:.7;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .014' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 .1  1.6 0 0 0 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+    background-size:100% 100%; background-repeat:no-repeat;
+  }
+  a{color:inherit}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 28px; position:relative; z-index:2}
+
+  /* ── SVG inks ── */
+  svg .b{fill:var(--c)} svg .a{fill:var(--c2)} svg .g{fill:var(--glint)} svg .s{fill:var(--shade)}
+  .Lfar{--c:var(--far); --c2:var(--far-2)}
+  .Lmid{--c:var(--mid); --c2:var(--mid-2)}
+  .Lnear{--c:var(--near); --c2:var(--near-2)}
+  .Lmeadow,.Lhill{--c:var(--meadow); --c2:var(--meadow-2)}
+  .Lfg{--c:var(--paper)}
+  .Lfoot{--c:var(--foot)}
+  .Lband{--c:var(--band)}
+  svg .pl{fill:var(--pine-l)} svg .pd{fill:var(--pine-d)}
+  svg .rv{fill:var(--river)} svg .rvh{fill:var(--river-hi); opacity:.5}
+  svg .sun1{fill:var(--sun-1)} svg .sun2{fill:var(--sun-2)}
+  svg .moon1{fill:var(--sun-1)} svg .moon2{fill:var(--sun-2)}
+  svg .cl{fill:var(--cloud); opacity:.55}
+  svg .tw{fill:var(--spark); transform-box:fill-box; transform-origin:center; animation:twinkle 4.6s ease-in-out infinite}
+  .stars{opacity:.55}
+  @media (prefers-color-scheme: dark){ .stars{opacity:1} svg .cl{opacity:.35} }
+  .ly{transform:translate(calc(var(--mx,0) * var(--k,0) * -26px), calc(var(--sy,0) * var(--k,0) * 1px)); will-change:transform}
+  .Lsky .cl:nth-of-type(odd){animation:drift 48s ease-in-out infinite alternate}
+  .Lsky .cl:nth-of-type(even){animation:drift 62s ease-in-out -20s infinite alternate-reverse}
+  @keyframes drift{from{transform:translateX(-30px)} to{transform:translateX(40px)}}
+  @keyframes twinkle{0%,100%{opacity:.15; transform:scale(.35) rotate(0)} 50%{opacity:1; transform:scale(1) rotate(45deg)}}
+
+  /* ── Brand ── */
+  nav{display:flex; align-items:center; justify-content:space-between; padding:24px 0}
+  .brand{display:flex; align-items:center; gap:11px; text-decoration:none; font:400 23px/1 var(--display); letter-spacing:-.005em; color:var(--on-sky)}
+  .brand svg{width:34px; height:34px; display:block}
+  .pill{display:inline-flex; align-items:center; text-decoration:none; font:600 14px/1 var(--body); padding:11px 16px; color:var(--deep); background:var(--on-sky);
+        clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:background .2s}
+  .pill:hover{background:var(--lime)}
+
+  /* ── Hero: a valley at the bottom of the sky ── */
+  .hero-shell{
+    --scene-h:clamp(380px, 52.8vw, 860px);
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 34%, var(--sky-c) 62%, var(--sky-d) 84%, var(--sky-d) 100%);
+  }
+  .hero-shell .scene{position:absolute; left:0; bottom:-1px; width:100%; height:var(--scene-h); display:block; z-index:0}
+  .hero > *{min-width:0}
+  .hero{display:grid; grid-template-columns:1.12fr .88fr; gap:36px; align-items:start; padding:30px 0 calc(var(--scene-h) * .54)}
+  .eyebrow{font:500 12.5px/1 var(--mono); color:var(--on-sky-2); letter-spacing:.14em; text-transform:uppercase; display:flex; align-items:center; gap:10px}
+  .eyebrow::before{content:""; width:10px; height:10px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  h1{font:400 clamp(44px,5.7vw,80px)/1.02 var(--display); letter-spacing:-.018em; margin:22px 0 22px; color:var(--on-sky);
+     text-shadow:3px 3px 0 rgba(255,111,89,.5)}
+  h1 em{font-style:normal; color:var(--lime); text-shadow:3px 3px 0 rgba(27,23,71,.45)}
+  .lede{font-size:clamp(18px,1.55vw,21px); line-height:1.5; color:var(--on-sky-2); margin:0 0 30px; max-width:27em}
+
+  /* ── Waitlist form (chamfered paper slip) ── */
+  .join{position:relative; isolation:isolate; display:flex; gap:8px; max-width:450px; padding:7px}
+  .join::before,.join::after{content:""; position:absolute; inset:0; clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+  .join::before{background:var(--card); z-index:-1}
+  .join::after{background:var(--deep); z-index:-2; transform:translate(6px,6px); transition:background .2s, transform .2s}
+  .join:focus-within::after{background:var(--coral); transform:translate(8px,8px)}
+  .join input[type=email]{flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font:16px var(--body); padding:0 12px; outline:none}
+  .join input::placeholder{color:var(--ink-3)}
+  .join button{border:0; cursor:pointer; background:var(--lime); color:#1b1747; font:600 15.5px/1 var(--body); padding:15px 20px; white-space:nowrap;
+               clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:transform .2s ease, background .2s}
+  .join button:hover{background:#d8f75c; transform:translateY(-1px)}
+  .join button:focus-visible{outline:3px solid var(--coral); outline-offset:2px}
+  .join button[disabled]{opacity:.6; cursor:default; transform:none}
+  .hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+  .formnote{font:13px/1.4 var(--mono); color:var(--on-sky-2); margin:14px 0 0 4px; min-height:1.4em}
+  .formnote.err{color:var(--peach)}
+  .done{display:none; align-items:center; gap:12px; max-width:450px; padding:16px 20px; background:var(--card); color:var(--ink); font-size:16px;
+        clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+  .done::before{content:""; flex:none; width:14px; height:14px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); box-shadow:inset 0 0 0 20px var(--lime)}
+  .joined .join, .joined .formnote{display:none}
+  .joined .done{display:flex}
+
+  /* ── Moment cards floating over the valley ── */
+  .field{position:relative; height:440px; margin-top:12px; margin-bottom:calc(var(--scene-h) * -.2)}
+  .moment{position:absolute; z-index:2; width:min(272px,72%); padding:15px 17px 14px; isolation:isolate; --cut:13px;
+          opacity:0; animation:arrive .9s cubic-bezier(.2,.7,.2,1) forwards, float 7s ease-in-out infinite alternate}
+  .moment::before,.moment::after,.card::before,.card::after{content:""; position:absolute; inset:0;
+          clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+  .moment::before{background:var(--card); z-index:-1}
+  .moment::after{background:var(--deep); opacity:.6; z-index:-2; transform:translate(7px,7px)}
+  .moment .src{display:flex; align-items:center; gap:8px; font:500 12px/1 var(--mono); color:var(--ink-3)}
+  .moment .src i{width:9px; height:9px; display:inline-block; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .moment p{margin:9px 0 12px; font-size:15.5px; line-height:1.35; color:var(--ink)}
+  .chip{display:inline-flex; align-items:center; gap:6px; font:600 12.5px/1 var(--body); padding:7px 11px; background:var(--chip-lime); color:var(--chip-lime-ink);
+        clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+  .chip.coral{background:var(--chip-coral); color:var(--chip-coral-ink)}
+  .chip.mute{background:var(--chip); color:var(--ink-3)}
+  .moment.quiet .src,.moment.quiet p{opacity:.72}
+  .moment.quiet p{text-decoration:line-through; text-decoration-color:rgba(127,120,170,.6)}
+  .navr{display:flex; align-items:center; gap:18px}
+  .navlink{color:var(--on-sky); text-decoration:none; font:600 14px/1 var(--body); opacity:.85}
+  .navlink:hover{opacity:1; text-decoration:underline; text-underline-offset:4px}
+  .join select{border:0; background:transparent; color:var(--ink); font:15px var(--body); padding:0 4px; max-width:132px; outline:none; cursor:pointer}
+  .join:has(select){max-width:560px}
+  @media (max-width:560px){ .navlink{display:none} .pill{white-space:nowrap} }
+  @media (max-width:560px){ .join:has(select){flex-wrap:wrap} .join:has(select) input[type=email]{flex-basis:100%; padding:10px 12px} .join:has(select) select{flex:1; padding:8px} }
+  .finenote{margin:18px 0 0; font-size:13px; color:var(--ink-3); max-width:42em}
+  .m1{left:0; top:0; animation-delay:.5s, 1.4s}
+  .m2{right:-2%; top:34%; animation-delay:1.3s, 2.2s}
+  .m3{left:8%; top:68%; animation-delay:2.1s, 3s}
+  @keyframes arrive{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+  @keyframes float{from{translate:0 0} to{translate:0 -8px}}
+
+  /* ── Sections ── */
+  section{padding:90px 0}
+  .kicker{font:500 12.5px/1 var(--mono); color:var(--ink-3); letter-spacing:.14em; text-transform:uppercase; display:flex; align-items:center; gap:10px}
+  .kicker::before{content:""; width:12px; height:10px; background:currentColor; clip-path:polygon(50% 0,100% 100%,0 100%)}
+  .kicker b{font-weight:500}
+  .moments .kicker{color:var(--violet-ink)}
+  h2{font:400 clamp(36px,4.6vw,60px)/1.04 var(--display); letter-spacing:-.015em; margin:16px 0 0}
+  .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:22px 20px; margin-top:42px}
+  .cards.three{grid-template-columns:repeat(3,1fr)}
+  .card{position:relative; isolation:isolate; padding:24px 22px 24px; min-height:176px; transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .card::before{background:var(--card); z-index:-1}
+  .card::after{background:var(--offset); z-index:-2; transform:translate(7px,7px); transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+  .card:hover{transform:translate(-2px,-2px)} .card:hover::after{transform:translate(10px,10px)}
+  .card .n{font:500 12px/1 var(--mono); color:var(--ink-3); letter-spacing:.06em}
+  .card .glyph{position:absolute; right:18px; top:16px; width:44px; height:44px}
+  .card h3{font:400 22px/1.15 var(--display); letter-spacing:-.005em; margin:30px 0 8px}
+  .card p{margin:0; color:var(--ink-2); font-size:15.5px; line-height:1.45}
+  .flow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:30px; font:13.5px/1.6 var(--mono)}
+  .flow span{padding:6px 11px; background:var(--chip); clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px); overflow-wrap:anywhere}
+  .flow .arr{background:none; padding:0; color:var(--ink-3); clip-path:none}
+  .secret{color:var(--chip-coral-ink); background:var(--chip-coral) !important}
+  .ph{color:var(--teal-ink); background:var(--chip-aqua) !important}
+
+  /* glyph inks */
+  .glyph .q1{fill:var(--sun-2)} .glyph .q2{fill:var(--sun-1)} .glyph .q3{fill:var(--violet)} .glyph .q4{fill:var(--far)}
+  .glyph .q5{fill:var(--lime)} .glyph .q6{fill:var(--meadow-2)} .glyph .q7{fill:var(--river)} .glyph .q8{fill:var(--near)} .glyph .q9{fill:var(--coral)}
+
+  /* ── Download: a dusk band between ridges ── */
+  .band-wrap{position:relative}
+  .edge{display:block; width:100%; height:110px; margin:0 0 -1px}
+  .edge.bottom{height:80px; margin:-1px 0 0}
+  .band{background:var(--band); color:#f7f0dc;
+        --ink:#f7f0dc; --ink-2:#cfc8ef; --ink-3:#a39dd6; --card:#3a31b2; --chip:rgba(255,255,255,.1); --offset:var(--aqua);
+        --chip-coral:rgba(255,111,89,.22); --chip-coral-ink:#ffb3a3; --chip-aqua:rgba(98,230,216,.16); --teal-ink:#8ff3e8}
+  @media (prefers-color-scheme: dark){ .band{--card:#2a2380; --offset:#2a9d97} .Lband{--glint:#9a8af0} }
+  .band section{padding:50px 0 70px}
+  .band .kicker{color:var(--lime)}
+
+  /* ── Runs on your computer ── */
+  .local{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:end}
+  .local .kicker{color:var(--teal-ink)}
+  .badge{position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:20px; padding:20px 26px 20px 20px; margin-top:34px; --cut:14px; font:600 16px var(--body)}
+  .badge::before,.badge::after{content:""; position:absolute; inset:0; clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+  .badge::before{background:var(--card); z-index:-1} .badge::after{background:var(--pine-l); z-index:-2; transform:translate(7px,7px)}
+  .mac{flex:none; width:118px}
+  .mac .screen{display:block; border:4px solid var(--deep); border-bottom-width:9px; border-radius:6px 6px 2px 2px; overflow:hidden; aspect-ratio:200/120; background:var(--sky-b)}
+  @media (prefers-color-scheme: dark){ .mac .screen{border-color:#3b3580} }
+  .mac .screen svg{display:block; width:100%; height:100%; background:linear-gradient(180deg,var(--sky-b),var(--sky-c) 60%,var(--sky-d))}
+  .mac .base{display:block; height:6px; margin:0 -9px; background:var(--deep); clip-path:polygon(0 0,100% 0,94% 100%,6% 100%)}
+  @media (prefers-color-scheme: dark){ .mac .base{background:#3b3580} }
+  .badge small{display:block; color:var(--ink-3); font:500 12.5px var(--mono); margin-top:4px}
+  .grove{display:block; width:100%; max-width:500px; height:auto; justify-self:end; overflow:visible; animation:bob 9s ease-in-out infinite alternate}
+  svg .rk1{fill:var(--far)} svg .rk2{fill:var(--mid)}
+  @keyframes bob{from{transform:translateY(0)} to{transform:translateY(-12px)}}
+  .cta .edge.paper{position:absolute; top:-1px; left:0; width:100%; height:64px; margin:0; z-index:1}
+
+  /* ── Closing: same valley at dusk ── */
+  .cta{position:relative; overflow:hidden; text-align:center; color:var(--on-sky);
+       --scene-h:clamp(260px, 32vw, 520px);
+       --far:#8b6fdc; --far-2:#d77aa6; --mid:#5a3db8; --mid-2:#3f4fb8; --near:#2c2185; --near-2:#24497c; --pine-l:#2f5f78; --pine-d:#171448; --glint:#ffb48a;
+       background:linear-gradient(180deg, #2420b8 0%, #5a3fc6 38%, #c0629a 64%, #ff9a72 84%, #ff9a72 100%);
+       padding:110px 0 calc(var(--scene-h) * .62)}
+  @media (prefers-color-scheme: dark){
+    .cta{--far:#43358f; --far-2:#6b3f7e; --mid:#2c2275; --mid-2:#22306e; --near:#17124a; --near-2:#112c4a; --pine-l:#1a3e4f; --pine-d:#0a0a2a;
+         background:linear-gradient(180deg, #050420 0%, #120f4a 40%, #3a2466 68%, #7a3f6a 88%, #7a3f6a 100%)}
+  }
+  .cta .scene{position:absolute; left:0; bottom:-1px; width:100%; height:var(--scene-h); z-index:0}
+  .cta .kicker{justify-content:center; color:var(--on-sky-2)}
+  .cta .kicker::before{background:var(--lime)}
+  .cta h2{margin:16px auto 32px; color:var(--on-sky); text-shadow:3px 3px 0 rgba(255,111,89,.45)}
+  .cta .join, .cta .done{margin:0 auto}
+  .cta .formnote{text-align:center; margin-left:0}
+  .foot{background:var(--foot); color:rgba(247,240,220,.72)}
+  footer{padding:26px 0 40px; font-size:14px; display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; font-family:var(--mono); letter-spacing:.02em}
+
+  /* ── Download + source links ── */
+  .gh{display:inline-flex; align-items:center; gap:7px}
+  .gh svg{width:18px; height:18px; flex:none; fill:currentColor}
+  .navr .gh.navlink{display:inline-flex}
+  .ctas{display:flex; align-items:center; gap:14px 22px; flex-wrap:wrap}
+  .dlbtn{display:inline-flex; align-items:center; gap:10px; text-decoration:none; border:0; cursor:pointer; background:var(--lime); color:#1b1747; font:600 15.5px/1.1 var(--body); padding:14px 18px;
+         clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:transform .2s ease, background .2s}
+  .dlbtn:hover{background:#d8f75c; transform:translateY(-1px)}
+  .dlbtn:focus-visible,.ghlink:focus-visible{outline:3px solid var(--coral); outline-offset:3px}
+  .dlbtn small{font:500 12px/1 var(--mono); opacity:.75}
+  .dlbtn.big{font-size:17px; padding:17px 22px}
+  .dlbtn.alt{background:rgba(255,255,255,.12); color:inherit}
+  .dlbtn.alt:hover{background:rgba(255,255,255,.2)}
+  .ghlink{color:var(--on-sky); font:600 15px/1 var(--body); text-underline-offset:4px}
+  .hero .formnote{margin-left:0}
+  .dl{display:grid; grid-template-columns:repeat(3,1fr); gap:22px 20px; margin-top:42px}
+  .dl .card{display:flex; flex-direction:column; gap:14px; min-height:0}
+  .dl .card h3{margin:0}
+  .dl .card .os{font:500 12px/1 var(--mono); color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase; display:flex; justify-content:space-between; gap:10px}
+  .dl .card .here{display:none; color:var(--lime)}
+  .dl .card.mine::after{background:var(--lime)}
+  .dl .card.mine .here{display:inline}
+  .dl .card .btns{display:flex; flex-direction:column; align-items:flex-start; gap:10px; margin-top:auto}
+  .dl .card ol{margin:0; padding-left:1.2em; color:var(--ink-2); font-size:15px; line-height:1.45}
+  .dl .card ol li+li{margin-top:4px}
+  .dlnote{margin:34px 0 0; max-width:46em; color:var(--ink-2); font-size:15.5px}
+  .dlnote a{color:var(--lime); text-underline-offset:3px}
+  .srcline{margin:22px 0 0; font-size:15px; color:var(--ink-2)}
+  .srcline a{color:var(--violet-ink); font-weight:600; text-underline-offset:3px}
+  footer a{color:inherit}
+  @media (max-width:880px){ .dl{grid-template-columns:minmax(0,1fr)} }
+  @media (max-width:1000px){ .cards{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:880px){
+    .hero-shell{--scene-h:clamp(390px, 104vw, 600px)}
+    .hero{grid-template-columns:minmax(0,1fr); padding:14px 0 calc(var(--scene-h) * .5); gap:16px}
+    .field{height:auto; margin:22px 0 calc(var(--scene-h) * -.1); display:flex; flex-direction:column; gap:14px}
+    .moment{position:relative; inset:auto; width:min(300px,86%)}
+    .m2{align-self:flex-end; right:auto; top:auto} .m3{left:auto; top:auto; margin-left:4%}
+    .cards.three,.local{grid-template-columns:minmax(0,1fr)}
+    .grove{justify-self:center; margin:10px auto 0; max-width:360px}
+    section{padding:64px 0}
+    .edge{height:70px} .edge.bottom{height:56px}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 20px}
+    .cards{grid-template-columns:minmax(0,1fr)}
+    .card{min-height:0} .card h3{margin-top:22px}
+    .join button{padding:14px 14px}
+    .join input[type=email]{padding:0 8px}
+    nav{padding:18px 0}
+    .badge{gap:16px; padding:16px 18px 16px 16px}
+    .mac{width:92px}
+    .cta{padding-top:84px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .moment{animation:none; opacity:1}
+    svg .tw{animation:none; opacity:.8; transform:none}
+    .Lsky .cl{animation:none !important}
+    .ly{transform:none !important}
+    .card,.card::after,.join::after{transition:none}
+    .grove{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero-shell print">
+  {{HERO}}
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="/" aria-label="Ambient home">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/>
+          <path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+          <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/>
+          <path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+          <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/>
+          <path fill="#c8e64a" d="M0 54L64 50V54L54 64H10L0 54Z"/>
+          <path fill="#62e6d8" d="M22 64L31 52H35L29 64Z"/>
+        </svg>Ambient</a>
+      <div class="navr"><a class="navlink" href="/teams/">For teams</a><a class="navlink gh" href="https://github.com/luqs1/ambient-ai" aria-label="Source on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>GitHub</span></a><a class="pill" href="#download">Download</a></div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Early alpha · macOS · Windows · Linux</div>
+        <h1>Proactive agents, <em>without</em> the surveillance.</h1>
+        <p class="lede">Local code and on-device classifiers decide when something’s worth acting on. Agents see one message, never your whole day.</p>
+        <div class="ctas">
+          <a class="dlbtn big" id="hero-dl" href="#download" data-os="">Download Ambient</a>
+          <a class="ghlink gh" href="https://github.com/luqs1/ambient-ai"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Read the source</a>
+        </div>
+        <p class="formnote" id="hero-dl-note">Free early build for macOS, Windows and Linux. Unsigned for now, <a href="#download" style="color:inherit">so your OS will ask first</a>.</p>
+      </div>
+      <div class="field" aria-hidden="true">
+        <div class="moment m1"><div class="src"><i style="background:var(--violet)"></i>Slack · Tofunmi</div><p>“Can you send the demo link?”</p><span class="chip">Matched on your device → Draft a reply</span></div>
+        <div class="moment m2 quiet"><div class="src"><i style="background:var(--violet)"></i>Slack · you</div><p>“haha nice”</p><span class="chip mute">No trigger · nothing sent</span></div>
+        <div class="moment m3"><div class="src"><i style="background:var(--river)"></i>GitHub · you</div><p>Opened a pull request</p><span class="chip">Matched → Summarise it for review</span></div>
+      </div>
+    </header>
+  </div>
+</div>
+
+<div class="wrap">
+  <section id="triggers" class="moments">
+    <div class="kicker"><b>Triggers</b></div>
+    <h2>Triggers in plain words.</h2>
+    <div class="cards">
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q1" d="M22 6L33 11L22 22Z"/><path class="q2" d="M33 11L38 22L22 22Z"/><path class="q1" d="M38 22L33 33L22 22Z"/><path class="q2" d="M33 33L22 38L22 22Z"/><path class="q1" d="M22 38L11 33L22 22Z"/><path class="q2" d="M11 33L6 22L22 22Z"/><path class="q1" d="M6 22L11 11L22 22Z"/><path class="q2" d="M11 11L22 6L22 22Z"/></svg><div class="n">01</div><h3>Say what matters</h3><p>“When I promise something in Slack, add it to my todos.”</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q4" d="M2 38L12 18L20 38Z"/><path class="q3" d="M12 38L22 8L32 38Z"/><path class="q8" d="M24 38L33 20L42 38Z"/><path class="q4" d="M22 8L22 38L12 38Z" opacity=".5"/></svg><div class="n">02</div><h3>Checked on your computer</h3><p>Plain code reads your apps. An offline model answers: does this match?</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q4" d="M4 40L22 12L23 40Z"/><path class="q3" d="M22 12L40 40L23 40Z"/><path class="q5" d="M22 2L25 7L22 12L19 7Z"/><path class="q5" d="M14 7L22 7L22 8Z"/></svg><div class="n">03</div><h3>Only matches leave</h3><p>One message, to the agent you chose. Nothing else.</p></div>
+      <div class="card"><svg class="glyph" viewBox="0 0 44 44" aria-hidden="true"><path class="q7" d="M4 14L24 14L24 6L40 22L24 22Z"/><path class="q6" d="M4 30L24 30L24 38L40 22L24 22Z"/></svg><div class="n">04</div><h3>Admin, handled</h3><p>Follow-ups drafted, promises tracked, asks answered.</p></div>
+    </div>
+    <div class="flow" aria-hidden="true">
+      <span>“send the demo link?”</span><span class="arr">→</span><span>matches, on your device</span><span class="arr">→</span><span>Claude drafts the reply</span>
+    </div>
+  </section>
+</div>
+
+<div class="band-wrap">
+  {{EDGE_TOP}}
+  <div class="band print">
+    <div class="wrap">
+      <section id="download">
+        <div class="kicker"><b>Download</b></div>
+        <h2>On macOS, Windows and Linux.</h2>
+        <div class="dl">
+          <div class="card" data-os="mac">
+            <div class="os"><span>macOS</span><span class="here">your system</span></div>
+            <h3>Apple silicon Macs</h3>
+            <ol>
+              <li>Open the .dmg and drag Ambient to Applications.</li>
+              <li>The first time, right-click Ambient → <b>Open</b>, then Open again.</li>
+              <li>Approve Ambient’s network extension when macOS asks.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="mac" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_aarch64.dmg">Download .dmg <small>Apple silicon</small></a></div>
+          </div>
+          <div class="card" data-os="win">
+            <div class="os"><span>Windows</span><span class="here">your system</span></div>
+            <h3>Windows, x64</h3>
+            <ol>
+              <li>If SmartScreen says “Windows protected your PC”, choose <b>More info → Run anyway</b>.</li>
+              <li>Windows asks for an administrator to install, and again when capture starts.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="win" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64-setup.exe">Download .exe <small>installer · x64</small></a><a class="dlbtn alt" data-dl="win-msi" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_x64_en-US.msi">.msi <small>for IT deployment</small></a></div>
+          </div>
+          <div class="card" data-os="linux">
+            <div class="os"><span>Linux</span><span class="here">your system</span></div>
+            <h3>Ubuntu, Debian</h3>
+            <ol>
+              <li>Install with <code>sudo apt install ./Ambient_0.1.0_amd64.deb</code>.</li>
+              <li>Setup asks for an administrator password once.</li>
+            </ol>
+            <div class="btns"><a class="dlbtn" data-dl="linux" href="https://github.com/luqs1/ambient-ai/releases/latest/download/Ambient_0.1.0_amd64.deb">Download .deb <small>x64</small></a></div>
+          </div>
+        </div>
+        <p class="dlnote">These are unsigned early builds, so each system warns you before the first run. To read your apps, Ambient adds its own certificate and captures network traffic on your device; your system asks you to confirm both. Every build comes from the public code: <a href="https://github.com/luqs1/ambient-ai">read the source on GitHub</a>.</p>
+      </section>
+    </div>
+  </div>
+  {{EDGE_BOTTOM}}
+</div>
+
+<div class="wrap">
+  <section id="local">
+    <div class="local">
+      <div>
+        <div class="kicker"><b>On-device</b></div>
+        <h2>Local-first. Yours.</h2>
+        <p class="srcline">Don’t take our word for it. The code that reads your apps and checks your triggers is public, fair source (FSL-1.1, Apache 2.0 after two years). <a class="gh" href="https://github.com/luqs1/ambient-ai">Read the source →</a></p>
+        <div class="badge"><span class="mac" aria-hidden="true"><span class="screen">{{MINI}}</span><span class="base"></span></span><div>Every trigger is checked on your computer<small>macOS · Windows · Linux</small></div></div>
+      </div>
+      {{GROVE}}
+    </div>
+  </section>
+</div>
+
+<div class="cta print" id="join-bottom">
+  {{EDGE_PAPER}}
+  {{CTA}}
+  <div class="wrap">
+    <div class="kicker"><b>Early alpha</b></div>
+    <h2>Proactive agents, on your terms.</h2>
+    <div class="ctas" style="justify-content:center; margin:0 0 28px"><a class="dlbtn big" id="cta-dl" href="#download" data-os="">Download Ambient</a></div>
+    <p class="formnote" style="margin:0 0 14px">Or get new builds by email:</p>
+    <div class="signup" data-source="footer">
+      <form class="join" novalidate>
+        <input type="email" name="email" placeholder="you@anything.com" autocomplete="email" required aria-label="Email">
+        <label class="hp" aria-hidden="true">Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label>
+        <button type="submit">Email me builds</button>
+      </form>
+      <div class="formnote" role="status"></div>
+      <div class="done">You’re on the list. We’ll email you new builds.</div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="wrap">
+    <footer><span>Ambient · early alpha · <a href="/teams/">for teams</a> · <a href="https://github.com/luqs1/ambient-ai">GitHub</a> (fair source)</span><span>Local-first by design.</span></footer>
+  </div>
+</div>
+
+<script>
+  const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i;
+  function markJoined() { document.querySelectorAll(".signup").forEach(s => s.classList.add("joined")); }
+  document.querySelectorAll(".signup").forEach(box => {
+    const form = box.querySelector("form"), note = box.querySelector(".formnote"), btn = form.querySelector("button");
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const email = form.email.value.trim();
+      note.classList.remove("err"); note.textContent = "";
+      if (!EMAIL_RE.test(email)) { note.textContent = "That email doesn’t look right."; note.classList.add("err"); return; }
+      btn.disabled = true; btn.textContent = "Joining…";
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, company: form.company.value, team_size: form.team_size ? form.team_size.value : null, source: box.dataset.source, referrer: document.referrer || null })
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok || !out.ok) throw new Error(out.error || "failed");
+        try { posthog.identify(email.toLowerCase(), { email: email.toLowerCase() }); posthog.capture("waitlist_submitted", { source: box.dataset.source }); } catch (_) {}
+        markJoined();
+      } catch (e) {
+        note.textContent = e.message === "invalid_email" ? "That email doesn’t look right." : "Something went wrong. Try again?";
+        note.classList.add("err");
+      } finally { btn.disabled = false; btn.textContent = "Email me builds"; }
+    });
+  });
+
+  // Download: highlight the visitor's system; every option stays visible.
+  (() => {
+    const ua = navigator.userAgent || "", plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+    const mobile = /Android|iPhone|iPad|iPod/i.test(ua);
+    const os = mobile ? "" : /Win/i.test(plat + ua) ? "win" : /Mac/i.test(plat + ua) ? "mac" : /Linux|X11|CrOS/i.test(plat + ua) ? "linux" : "";
+    const names = { mac: "macOS", win: "Windows", linux: "Linux" };
+    if (!os) return;
+    const card = document.querySelector('.dl .card[data-os="' + os + '"]');
+    const file = card && card.querySelector(".dlbtn");
+    if (!card || !file) return;
+    card.classList.add("mine");
+    document.querySelectorAll("#hero-dl, #cta-dl").forEach(b => { b.href = file.href; b.textContent = "Download for " + names[os]; b.dataset.os = os; });
+  })();
+  document.querySelectorAll("a.dlbtn").forEach(a => a.addEventListener("click", () => {
+    try { posthog.capture("download_clicked", { os: a.dataset.dl || a.dataset.os || "section" }); } catch (_) {}
+  }));
+
+  // Parallax: ridges drift apart as you scroll; a little sway with the pointer.
+  (() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const scene = document.querySelector(".hero-shell .scene");
+    if (!scene) return;
+    let sy = 0, mx = 0, tmx = 0, raf = 0;
+    const tick = () => {
+      raf = 0;
+      mx += (tmx - mx) * .08;
+      scene.style.setProperty("--sy", sy.toFixed(1));
+      scene.style.setProperty("--mx", mx.toFixed(3));
+      if (Math.abs(tmx - mx) > .002) raf = requestAnimationFrame(tick);
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    addEventListener("scroll", () => { sy = Math.min(scrollY, innerHeight * 1.5); kick(); }, { passive: true });
+    if (matchMedia("(pointer: fine)").matches) {
+      addEventListener("pointermove", e => { if (scrollY < innerHeight) { tmx = (e.clientX / innerWidth - .5) * 2; kick(); } }, { passive: true });
+    }
+  })();
+</script>
+</body>
+</html>

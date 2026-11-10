@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Control the Ambient test VMs on this box. Usage: vmctl <start|stop|restart|kill|status|shot|mon|keys|type> <win|lin> [...]
+set -euo pipefail
+root=${AMBIENT_VMS:-$HOME/ambient-vms}
+cmd=${1:-status}; name=${2:-}
+unit="ambient-vm@$name.service"
+d=$root/$name
+qmp() { python3 "$root/bin/qmp.py" "$d/qmp.sock" "$@"; }
+need() { case "$name" in win|lin) ;; *) echo "usage: vmctl $cmd win|lin" >&2; exit 2;; esac; }
+
+case "$cmd" in
+start)   need; sudo -n systemctl start "$unit"; systemctl is-active "$unit" ;;
+stop)    need; sudo -n systemctl stop "$unit"; systemctl is-active "$unit" || true ;;   # clean ACPI shutdown, waits up to 150 s
+restart) need; sudo -n systemctl restart "$unit"; systemctl is-active "$unit" ;;
+kill)    need; sudo -n systemctl kill -s KILL "$unit" ;;                                # pull the plug
+enable|disable) need; sudo -n systemctl "$cmd" "$unit" ;;                               # start with WSL or not
+status)
+  for n in ${name:-win lin}; do
+    st=$(systemctl is-active "ambient-vm@$n.service" || true)
+    pid=$(cat "$root/$n/qemu.pid" 2>/dev/null || true)
+    rss=""; [ -n "$pid" ] && [ -d "/proc/$pid" ] && rss=" rss=$(( $(awk '/VmRSS/{print $2}' /proc/$pid/status) / 1024 ))MB"
+    disk=$(du -sh "$root/$n/disk.qcow2" 2>/dev/null | cut -f1 || true)
+    echo "$n: $st${rss} disk=${disk:-none}"
+  done ;;
+shot)    # PNG of the VM's display on stdout
+  need; f=$root/shots/$name.png; rm -f "$f"
+  qmp screendump "{\"filename\":\"$f\",\"format\":\"png\"}" >/dev/null
+  cat "$f" ;;
+mon)     need; shift 2; echo "$*" | socat - "UNIX-CONNECT:$d/monitor.sock" ;;            # raw QEMU monitor command
+keys)    need; shift 2; for k in "$@"; do qmp human-monitor-command "{\"command-line\":\"sendkey $k\"}" >/dev/null; sleep 0.15; done ;;
+_powerdown)  # used by the systemd unit: ask the guest to shut down and wait for QEMU to exit
+  need; pid=$(cat "$d/qemu.pid" 2>/dev/null || true)
+  [ -n "$pid" ] && [ -d "/proc/$pid" ] || exit 0
+  for i in $(seq 1 120); do
+    [ -d "/proc/$pid" ] || exit 0
+    if (( i % 20 == 1 )); then qmp system_powerdown >/dev/null 2>&1 || true; fi
+    sleep 1
+  done ;;
+*) echo "usage: vmctl <start|stop|restart|kill|enable|disable|status|shot|mon|keys> <win|lin>" >&2; exit 2 ;;
+esac

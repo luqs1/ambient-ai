@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ambient · details</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  /* Ambient palette: ink-navy night valley (light: cream paper) */
+  :root{
+    --bg:#f7f0dc; --panel:#fffaee; --line:#e2d8bc; --text:#1b1747; --dim:#7a76a3;
+    --accent:#5638c4; --up:#c23a26; --down:#0e6b66; --high:#c23a26; --med:#a8690f; --low:#7a76a3; --sel:#e6f6a3;
+    --sky-a:#2420b8; --sky-b:#2d4fd0; --on-sky:#fbf4e2;
+    --mono:"Spline Sans Mono", ui-monospace, Menlo, monospace; --display:"Young Serif", Georgia, serif; --body:"Schibsted Grotesk", -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --bg:#13113a; --panel:#1e1a55; --line:#2e2876; --text:#f7f0dc; --dim:#928cc4;
+    --accent:#c9ec3f; --up:#ff9a86; --down:#7ff0e3; --high:#ff6f59; --med:#ffc6a0; --low:#928cc4; --sel:#2c2a6e;
+    --sky-a:#0b0a33; --sky-b:#1a1f72;
+  } }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 var(--body);height:100vh;display:grid;grid-template-rows:auto 1fr}
+  header{display:flex;gap:16px;align-items:center;padding:10px 16px;color:var(--on-sky);background:linear-gradient(180deg,var(--sky-a),var(--sky-b))}
+  header .back{display:inline-flex;align-items:center;gap:8px;color:var(--on-sky);text-decoration:none;font:600 13px var(--body);padding:6px 10px 6px 8px;background:rgba(255,255,255,.14);
+    clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+  header .back:hover{background:rgba(255,255,255,.26)}
+  header .back svg{width:18px;height:18px}
+  header h1{font:400 17px var(--display);margin:0}
+  header .stat,header .stat b{color:var(--on-sky)}
+  header .chip{border-color:rgba(255,255,255,.3);color:var(--on-sky)}
+  header .chip.on{border-color:#c9ec3f;color:#c9ec3f}
+  header input[type=search]{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:var(--on-sky)}
+  header input[type=search]::placeholder{color:rgba(251,244,226,.6)}
+  .stat{color:var(--dim);font-family:var(--mono);font-size:12px}
+  .stat b{color:var(--text);font-weight:500}
+  .chips{display:flex;gap:6px;margin-left:auto}
+  .chip{background:none;border:1px solid var(--line);color:var(--dim);padding:4px 10px;border-radius:99px;cursor:pointer;font-size:12px}
+  .chip.on{border-color:var(--accent);color:var(--accent)}
+  input[type=search]{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:5px 10px;border-radius:6px;width:220px}
+  main{display:grid;grid-template-columns:230px 1fr 38%;min-height:0}
+  aside,section,#detail{overflow:auto;min-height:0}
+  aside{border-right:1px solid var(--line);padding:8px 0}
+  aside h2,#detail h3{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:12px 14px 6px}
+  .app{padding:7px 14px;cursor:pointer;border-left:2px solid transparent}
+  .app:hover{background:var(--panel)}
+  .app.on{border-left-color:var(--accent);background:var(--panel)}
+  .app .name{display:flex;justify-content:space-between;gap:6px}
+  .app .meta{color:var(--dim);font:11px var(--mono)}
+  .bar{height:3px;display:flex;margin-top:4px;border-radius:2px;overflow:hidden;background:var(--line)}
+  .bar i{display:block}
+  .badge{font:10px var(--mono);padding:0 5px;border-radius:3px;border:1px solid}
+  .b-high{color:var(--high);border-color:var(--high)} .b-medium{color:var(--med);border-color:var(--med)}
+  .b-low{color:var(--low);border-color:var(--low)} .b-opaque{color:var(--dim);border-color:var(--line)}
+  .b-ai{color:var(--accent);border-color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font:12px var(--mono)}
+  th{position:sticky;top:0;background:var(--bg);text-align:left;color:var(--dim);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+  tr{cursor:pointer} tr:hover td{background:var(--panel)} tr.sel td{background:var(--sel)}
+  tr.opaque td{color:var(--dim)}
+  .up{color:var(--up)} .down{color:var(--down)}
+  #detail{border-left:1px solid var(--line);padding:0 0 30px}
+  #detail .empty{color:var(--dim);padding:40px 20px;text-align:center}
+  #detail .kv{display:grid;grid-template-columns:110px 1fr;gap:3px 10px;padding:0 14px;font:12px var(--mono)}
+  #detail .kv div:nth-child(odd){color:var(--dim)}
+  #detail .kv div{word-break:break-all}
+  pre{margin:0 14px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font:11.5px/1.5 var(--mono);white-space:pre-wrap;word-break:break-all;max-height:420px;overflow:auto}
+  .finding{margin:3px 14px;font:12px var(--mono)}
+  .note{margin:8px 14px;padding:8px 10px;border-left:2px solid var(--med);background:var(--panel);color:var(--text)}
+  .ai td{padding:3px 14px;font:11px var(--mono)}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="/" title="Back to Ambient">← <svg viewBox="0 0 64 64" aria-hidden="true">
+    <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/><path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+    <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/><path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+    <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/></svg>Ambient</a>
+  <h1>Details</h1>
+  <div class="stat" id="totals"></div>
+  <div class="chips" id="chips">
+    <button class="chip on" data-only="">All</button>
+    <button class="chip" data-only="findings">Leaks</button>
+    <button class="chip" data-only="llm">AI calls</button>
+    <button class="chip" data-only="opaque">Couldn't decrypt</button>
+  </div>
+  <input type="search" id="q" placeholder="search host, path, body…">
+</header>
+<main>
+  <aside>
+    <h2>Apps</h2><div id="apps"></div>
+    <h2>AI usage</h2><table class="ai"><tbody id="ai"></tbody></table>
+  </aside>
+  <section>
+    <table><thead><tr>
+      <th style="width:82px">time</th><th style="width:110px">app</th><th style="width:70px">kind</th>
+      <th>host / path</th><th style="width:48px">status</th><th style="width:54px">↑</th><th style="width:54px">↓</th><th style="width:120px"></th>
+    </tr></thead><tbody id="flows"></tbody></table>
+  </section>
+  <div id="detail"><div class="empty">Select an exchange to see exactly what was sent and received.</div></div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const kb = n => n == null ? "" : n < 1024 ? n + "B" : n < 1048576 ? (n/1024).toFixed(1) + "K" : (n/1048576).toFixed(1) + "M";
+const t = ts => new Date(ts*1000).toLocaleTimeString([], {hour12:false});
+let state = {app:"", only:"", q:"", maxId:0, sel:null, rows:[]};
+
+function badges(r){
+  let b = "";
+  if (r.max_sev && r.max_sev !== "info") b += `<span class="badge b-${r.max_sev}">${r.max_sev}</span> `;
+  if (r.llm) { const l = JSON.parse(r.llm); b += `<span class="badge b-ai">${esc(l.model || l.provider)}</span> `; }
+  if (r.mcp) { const m = JSON.parse(r.mcp); b += `<span class="badge b-ai">mcp ${esc(m.tool || m.method)}</span> `; }
+  if (!r.decrypted) b += `<span class="badge b-opaque">encrypted</span>`;
+  return b;
+}
+function rowHtml(r){
+  const what = r.kind === "dns" ? r.host : (r.host || "") + (r.path ? `<span style="color:var(--dim)">${esc(r.path)}</span>` : "");
+  return `<tr data-id="${r.id}" class="${r.decrypted ? "" : "opaque"} ${state.sel==r.id?"sel":""}">
+    <td>${t(r.ts)}</td><td title="${esc(r.app)}">${esc(r.app)}</td><td>${esc(r.method || r.kind)}</td>
+    <td title="${esc(r.host)}${esc(r.path)}">${what}</td><td>${r.status ?? ""}</td>
+    <td class="up">${kb(r.req_bytes)}</td><td class="down">${kb(r.resp_bytes)}</td><td>${badges(r)}</td></tr>`;
+}
+async function loadFlows(reset){
+  if (reset){ state.maxId = 0; state.rows = []; $("#flows").innerHTML = ""; }
+  const p = new URLSearchParams({after: state.maxId, app: state.app, only: state.only, q: state.q});
+  const rows = await (await fetch("/api/flows?" + p)).json();
+  if (!rows.length) return;
+  state.maxId = Math.max(state.maxId, ...rows.map(r => r.id));
+  $("#flows").insertAdjacentHTML("afterbegin", rows.map(rowHtml).join(""));
+  const tb = $("#flows"); while (tb.rows.length > 1500) tb.deleteRow(-1);
+}
+async function loadSide(){
+  const [apps, sum] = await Promise.all([fetch("/api/apps").then(r=>r.json()), fetch("/api/summary").then(r=>r.json())]);
+  const T = sum.totals;
+  $("#totals").innerHTML = `<b>${T.n||0}</b> exchanges · <b>${T.decrypted||0}</b> read · <b>${T.opaque||0}</b> opaque · `
+    + `<span style="color:var(--high)">${T.high||0} high</span> / <span style="color:var(--med)">${T.medium||0} med</span> · `
+    + `<span class="up">↑${kb(T.up)}</span> <span class="down">↓${kb(T.down)}</span>`;
+  const all = {app:"", n:apps.reduce((a,x)=>a+x.n,0)};
+  $("#apps").innerHTML = [all, ...apps].map(a => {
+    const tot = (a.up||0)+(a.down||0) || 1;
+    return `<div class="app ${state.app===a.app?"on":""}" data-app="${esc(a.app)}">
+      <div class="name"><span>${a.app ? esc(a.app) : "All apps"}</span><span>
+        ${a.findings ? `<span class="badge b-high">${a.findings}</span>` : ""}
+        ${a.llm ? `<span class="badge b-ai">AI ${a.llm}</span>` : ""}</span></div>
+      ${a.app ? `<div class="meta">${a.n} · ${a.hosts} hosts · <span class="up">↑${kb(a.up)}</span> <span class="down">↓${kb(a.down)}</span>${a.opaque?` · ${a.opaque} opaque`:""}</div>
+      <div class="bar"><i style="width:${100*(a.up||0)/tot}%;background:var(--up)"></i><i style="width:${100*(a.down||0)/tot}%;background:var(--down)"></i></div>` : ""}
+    </div>`;}).join("");
+  $("#ai").innerHTML = sum.llm.map(l => `<tr><td>${esc(l.app)}<br><span style="color:var(--accent)">${esc(l.model||l.provider)}</span></td>
+    <td>${l.calls}×<br>${l.input_tokens||0}→${l.output_tokens||0} tok</td></tr>`).join("") || `<tr><td style="color:var(--dim)">none yet</td></tr>`;
+}
+function pretty(body){
+  if (!body) return "";
+  try { return JSON.stringify(JSON.parse(body), null, 2); } catch { return body; }
+}
+function hdrs(h){ if (!h) return ""; return JSON.parse(h).map(([k,v]) => `${k}: ${v}`).join("\n"); }
+async function showDetail(id){
+  state.sel = id;
+  document.querySelectorAll("tr.sel").forEach(e => e.classList.remove("sel"));
+  document.querySelector(`tr[data-id="${id}"]`)?.classList.add("sel");
+  const f = await (await fetch("/api/flow/" + id)).json();
+  const findings = f.findings ? JSON.parse(f.findings) : [];
+  const llm = f.llm ? JSON.parse(f.llm) : null, mcp = f.mcp ? JSON.parse(f.mcp) : null;
+  $("#detail").innerHTML = `
+    <h3>${esc(f.kind)} · ${f.decrypted ? "plaintext visible" : "encrypted, metadata only"}</h3>
+    <div class="kv">
+      <div>app</div><div>${esc(f.app)} ${f.pid ? `(pid ${f.pid})` : ""}</div>
+      <div>process</div><div>${esc(f.process_path)}</div>
+      <div>destination</div><div>${esc(f.host)} ${esc(f.server)}</div>
+      ${f.url ? `<div>url</div><div>${esc(f.method)} ${esc(f.url)}</div>` : ""}
+      ${f.status ? `<div>status</div><div>${f.status}</div>` : ""}
+      <div>bytes</div><div><span class="up">↑${kb(f.req_bytes)}</span> <span class="down">↓${kb(f.resp_bytes)}</span>${f.duration ? ` in ${f.duration.toFixed(2)}s` : ""}</div>
+    </div>
+    ${f.note ? `<div class="note">${esc(f.note)}</div>` : ""}
+    ${findings.length ? `<h3>What left the device that matters</h3>` + findings.map(x =>
+      `<div class="finding"><span class="badge b-${x.severity}">${x.severity}</span> ${esc(x.kind)} in ${esc(x.where)}: <code>${esc(x.sample)}</code></div>`).join("") : ""}
+    ${llm ? `<h3>AI call</h3><pre>${esc(JSON.stringify(llm, null, 2))}</pre>` : ""}
+    ${mcp ? `<h3>MCP</h3><pre>${esc(JSON.stringify(mcp, null, 2))}</pre>` : ""}
+    ${f.req_headers ? `<h3>Request headers</h3><pre>${esc(hdrs(f.req_headers))}</pre>` : ""}
+    ${f.req_body ? `<h3>Sent</h3><pre>${esc(pretty(f.req_body))}</pre>` : ""}
+    ${f.resp_headers ? `<h3>Response headers</h3><pre>${esc(hdrs(f.resp_headers))}</pre>` : ""}
+    ${f.resp_body ? `<h3>Received</h3><pre>${esc(pretty(f.resp_body))}</pre>` : ""}`;
+}
+$("#flows").addEventListener("click", e => { const tr = e.target.closest("tr"); if (tr) showDetail(+tr.dataset.id); });
+$("#apps").addEventListener("click", e => { const a = e.target.closest(".app"); if (!a) return; state.app = a.dataset.app; loadFlows(true); loadSide(); });
+$("#chips").addEventListener("click", e => { const c = e.target.closest(".chip"); if (!c) return;
+  document.querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c)); state.only = c.dataset.only; loadFlows(true); });
+let qt; $("#q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value; loadFlows(true); }, 250); });
+loadFlows(true); loadSide();
+setInterval(() => loadFlows(false), 1500); setInterval(loadSide, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The UI is served by the engine on 127.0.0.1; it may call the shell's own commands (open_main, toggle_pause) and nothing else.",
+  "windows": ["main", "panel"],
+  "remote": { "urls": ["http://127.0.0.1:*"] },
+  "permissions": ["core:default", "allow-open-main", "allow-toggle-pause"]
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# lin-pull <remote path> <local path>: copy a file or folder out of the Ubuntu VM.
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+[ $# -eq 2 ] || { echo "usage: lin-pull <remote> <local>" >&2; exit 2; }
+vm_pull lin "$1" "$2"

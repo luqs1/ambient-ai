@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# lin-exec <command...>: run a shell command in the Ubuntu VM (prefix with sudo for root). Example: lin-exec "sudo apt list --upgradable"
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+vm_exec lin "$@"

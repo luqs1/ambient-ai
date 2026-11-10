@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# win-toolchain [status]: install git, Node LTS, uv + Python 3.13, bun, VS Build Tools (C++) and Rust in the Windows VM.
+# The install runs inside the VM as a scheduled task (about 10 minutes on this box) and survives this command exiting; the VM reboots at the end.
+#   win-toolchain          start it
+#   win-toolchain status   show the tail of the log, and the versions once done
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+if [ "${1:-}" = status ]; then
+  vm_exec win 'if (Test-Path C:\ambient-setup\toolchain.done) { "DONE"; Get-Content C:\ambient-setup\toolchain.done } else { "RUNNING (or not started)"; Get-Content C:\ambient-setup\toolchain.log -Tail 15 -ErrorAction SilentlyContinue }'
+  exit
+fi
+vm_exec win 'New-Item -ItemType Directory -Force C:\ambient-setup | Out-Null'
+vm_push win "$VM_DIR/box/win-toolchain.ps1" C:/ambient-setup/win-toolchain.ps1
+"$VM_DIR/win-gui" -e powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\ambient-setup\win-toolchain.ps1'
+echo "started; check with: $0 status"

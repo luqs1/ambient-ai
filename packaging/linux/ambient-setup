@@ -1,0 +1,135 @@
+#!/bin/sh
+# /usr/lib/ambient/ambient-setup: the only part of Ambient that runs as root, and only when asked.
+# Ambient calls it through pkexec (one administrator prompt, see dev.ambient.desktop.policy):
+#
+#   ambient-setup trust     trust the calling user's Ambient certificate on this computer, point Firefox at it,
+#                           and let that user start capture (group ambient-capture)
+#   ambient-setup allow     only let the calling user start capture
+#   ambient-setup forget    undo `trust` for the calling user (certificate and Firefox policy; the group stays)
+#   ambient-setup helper    (re)apply owner, mode and capabilities of the capture helper (the package's postinst)
+#
+# It takes no paths or names from the caller: the user is whoever pkexec/sudo says started it, and the
+# certificate is that user's ~/.mitmproxy/mitmproxy-ca-cert.pem, which must parse as a CA certificate.
+set -eu
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+GROUP=ambient-capture
+HELPER=/usr/lib/ambient/ambient-redirector
+CAPS=cap_net_admin,cap_bpf,cap_perfmon+ep
+FF_DIR=/etc/firefox/policies
+FF_MARK=ambient-ca
+
+[ "$(id -u)" = 0 ] || { echo "ambient-setup must run as root (use pkexec)" >&2; exit 1; }
+
+caller() {
+  uid=${PKEXEC_UID:-${SUDO_UID:-}}
+  [ -n "$uid" ] && [ "$uid" != 0 ] || { echo "can't tell which user asked" >&2; exit 1; }
+  USER_NAME=$(getent passwd "$uid" | cut -d: -f1)
+  USER_HOME=$(getent passwd "$uid" | cut -d: -f6)
+  [ -n "$USER_NAME" ] && [ -d "$USER_HOME" ] || { echo "unknown user $uid" >&2; exit 1; }
+}
+
+helper() {
+  getent group "$GROUP" >/dev/null || groupadd --system "$GROUP"
+  [ -f "$HELPER" ] || return 0
+  chown root:"$GROUP" "$HELPER"
+  chmod 0750 "$HELPER"
+  setcap "$CAPS" "$HELPER"
+}
+
+allow() {
+  caller
+  getent group "$GROUP" >/dev/null || groupadd --system "$GROUP"
+  usermod -aG "$GROUP" "$USER_NAME"
+}
+
+# Where this distribution keeps extra trusted CAs, and how it rebuilds its bundle.
+store() {
+  if [ -d /usr/local/share/ca-certificates ] && command -v update-ca-certificates >/dev/null; then
+    ANCHOR=/usr/local/share/ca-certificates/ambient-$USER_NAME.crt; REBUILD=update-ca-certificates   # Debian, Ubuntu
+  elif [ -d /etc/pki/ca-trust/source/anchors ]; then
+    ANCHOR=/etc/pki/ca-trust/source/anchors/ambient-$USER_NAME.crt; REBUILD=update-ca-trust          # Fedora, RHEL
+  elif [ -d /etc/ca-certificates/trust-source/anchors ]; then
+    ANCHOR=/etc/ca-certificates/trust-source/anchors/ambient-$USER_NAME.crt; REBUILD="trust extract-compat"   # Arch
+  elif [ -d /etc/pki/trust/anchors ]; then
+    ANCHOR=/etc/pki/trust/anchors/ambient-$USER_NAME.crt; REBUILD=update-ca-certificates             # openSUSE
+  else
+    echo "don't know where this system keeps trusted certificates" >&2; exit 1
+  fi
+}
+
+# Firefox does not read the system list on Linux. Its policy file can name certificates to install; the copy
+# sits next to the policy so the snap build (which can read /etc/firefox but not /usr/local) finds it too.
+firefox_policy() {  # $1 = add | remove
+  cert=$FF_DIR/$FF_MARK-$USER_NAME.crt
+  if [ "$1" = add ]; then
+    mkdir -p "$FF_DIR"
+    install -m 0644 "$CA" "$cert"
+  else
+    rm -f "$cert"
+  fi
+  command -v python3 >/dev/null || { [ "$1" = add ] && echo "python3 missing: Firefox policy not written" >&2; return 0; }
+  python3 - "$FF_DIR/policies.json" "$cert" "$1" <<'PY'
+import json, os, sys
+path, cert, verb = sys.argv[1:4]
+try:
+    doc = json.load(open(path))
+    if not isinstance(doc, dict):
+        raise ValueError
+except FileNotFoundError:
+    doc = {}
+except Exception:
+    sys.exit("existing policies.json is not valid JSON: left alone")
+certs = doc.setdefault("policies", {}).setdefault("Certificates", {})
+install = [c for c in certs.get("Install", []) if c != cert]
+if verb == "add":
+    install.append(cert)
+if install:
+    certs["Install"] = install
+else:
+    certs.pop("Install", None)
+    if not certs:
+        doc["policies"].pop("Certificates", None)
+if not doc.get("policies"):
+    if os.path.exists(path):
+        os.remove(path)
+else:
+    tmp = path + ".ambient-tmp"
+    with open(tmp, "w") as f:
+        json.dump(doc, f, indent=2)
+        f.write("\n")
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, path)
+PY
+}
+
+case "${1:-}" in
+  helper) helper ;;
+  allow) allow ;;
+  trust)
+    caller
+    SRC=$USER_HOME/.mitmproxy/mitmproxy-ca-cert.pem
+    [ -f "$SRC" ] && [ ! -L "$SRC" ] || { echo "no certificate at $SRC (start Ambient once first)" >&2; exit 1; }
+    # Work on a root-owned copy, so what was checked is what gets installed.
+    CA=$(mktemp); trap 'rm -f "$CA"' EXIT
+    head -c 65536 "$SRC" > "$CA"
+    # Must be one certificate, and a certificate authority (not something else renamed).
+    [ "$(grep -c 'BEGIN CERTIFICATE' "$CA")" = 1 ] || { echo "$SRC is not a single certificate" >&2; exit 1; }
+    openssl x509 -in "$CA" -noout -ext basicConstraints 2>/dev/null | grep -q 'CA:TRUE' \
+      || { echo "$SRC is not a CA certificate" >&2; exit 1; }
+    store
+    install -m 0644 "$CA" "$ANCHOR"
+    $REBUILD >/dev/null
+    firefox_policy add || echo "Firefox policy not written" >&2
+    allow
+    echo "trusted $ANCHOR; $USER_NAME may capture"
+    ;;
+  forget)
+    caller
+    store
+    rm -f "$ANCHOR"
+    $REBUILD >/dev/null
+    firefox_policy remove || true
+    echo "removed $ANCHOR"
+    ;;
+  *) echo "usage: ambient-setup trust|allow|forget|helper" >&2; exit 2 ;;
+esac

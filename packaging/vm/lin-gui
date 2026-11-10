@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# lin-gui <command...>: start a program on the Ubuntu VM's visible XFCE desktop (display :0) and return at once.
+# Example: lin-gui xfce4-terminal        For one-off X commands just use: lin-exec 'DISPLAY=:0 xdotool getactivewindow'
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+[ $# -ge 1 ] || { echo "usage: lin-gui <command...>" >&2; exit 2; }
+vm_exec lin "export DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u)/bus; setsid -f $* >/dev/null 2>&1 </dev/null"

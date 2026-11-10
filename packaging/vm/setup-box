@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# setup-box [files|lin|win|forget-secrets]: (re)build the test VMs on the box from this folder.
+#   files           push box/* to ~/ambient-vms/bin on the box (no VM is touched)
+#   lin | win       push files, render the answer files with the key + password from keys/, create and boot the VM.
+#                   Refuses to wipe an existing disk unless FORCE=1 is set:  FORCE=1 ./setup-box win
+#   forget-secrets  delete the rendered Windows answer files (they hold the VM password) from the box after install
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+what=${1:-files}
+source "$VM_DIR/keys/passwords.env"
+pub=$(cat "$KEY.pub")
+stage=$(mktemp -d); trap 'rm -rf "$stage"' EXIT
+
+push_dir() {  # push_dir <local dir> <dir on box>
+  box "mkdir -p $2"
+  COPYFILE_DISABLE=1 tar --no-xattrs -C "$1" -cf - . | box "tar -C $2 -xf -"
+}
+push_files() {
+  push_dir "$VM_DIR/box" "$BOX_ROOT/bin"
+  # vm.conf is only seeded once so edits made on the box survive.
+  box_sh <<SH
+cd $BOX_ROOT && { [ -f vm.conf ] || cp bin/vm.conf vm.conf; }
+rm -f bin/vm.conf; chmod +x bin/run-vm bin/vmctl bin/create-vm bin/qmp.py
+SH
+}
+
+case "$what" in
+files) push_files ;;
+lin)
+  push_files
+  hash=$(printf '%s' "$LIN_PASSWORD" | box "openssl passwd -6 -stdin")
+  mkdir -p "$stage/seed"
+  sed -e "s|@LIN_USER@|$LIN_USER|g" -e "s|@LIN_PASSWORD_HASH@|$hash|g" -e "s|@SSH_PUBKEY@|$pub|g" \
+    "$VM_DIR/box/lin-user-data.tmpl" > "$stage/seed/user-data"
+  push_dir "$stage/seed" "$BOX_ROOT/lin/seed"
+  box "env FORCE=${FORCE:-0} $BOX_ROOT/bin/create-vm lin"
+  ;;
+win)
+  push_files
+  mkdir -p "$stage/unattend"
+  sed -e "s|@WIN_USER@|$WIN_USER|g" -e "s|@WIN_PASSWORD@|$WIN_PASSWORD|g" \
+    "$VM_DIR/box/autounattend.xml.tmpl" > "$stage/unattend/autounattend.xml"
+  cp "$VM_DIR/box/firstlogon.ps1" "$stage/unattend/"
+  printf '%s\n' "$pub" > "$stage/unattend/authorized_keys"
+  push_dir "$stage/unattend" "$BOX_ROOT/win/unattend"
+  box "env FORCE=${FORCE:-0} $BOX_ROOT/bin/create-vm win"
+  ;;
+forget-secrets)
+  box "rm -rf $BOX_ROOT/win/unattend $BOX_ROOT/win/unattend.iso"
+  ;;
+*) sed -n '2,6p' "$0"; exit 2 ;;
+esac

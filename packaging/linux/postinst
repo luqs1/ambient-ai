@@ -1,0 +1,23 @@
+#!/bin/sh
+# Ambient .deb: after the files are in place.
+#  - make the capture helper runnable without root: owned by root, group ambient-capture, mode 0750, with the
+#    three capabilities it needs (tun device, eBPF program, attaching it) and nothing else
+#  - let the person who ran the install (sudo apt install ./ambient.deb) start capture. Anyone else, or an install
+#    from a graphical software centre: the Trust button in Ambient does it (one administrator prompt), or
+#    `sudo usermod -aG ambient-capture <user>`.
+# The certificate is NOT touched here: it does not exist until Ambient first runs, and trusting it is the
+# user's decision (the Trust button).
+set -e
+if [ "$1" = configure ] || [ -z "${1:-}" ]; then
+  /usr/lib/ambient/ambient-setup helper
+  user=${SUDO_USER:-}
+  [ -n "$user" ] || { [ -n "${PKEXEC_UID:-}" ] && user=$(getent passwd "$PKEXEC_UID" | cut -d: -f1); } || true
+  if [ -n "$user" ] && [ "$user" != root ] && getent passwd "$user" >/dev/null; then
+    usermod -aG ambient-capture "$user" && echo "Ambient: $user may start capture (group ambient-capture)."
+  else
+    echo "Ambient: to let an account start capture: sudo usermod -aG ambient-capture <user>"
+  fi
+  command -v update-desktop-database >/dev/null && update-desktop-database -q /usr/share/applications || true
+  command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+fi
+exit 0

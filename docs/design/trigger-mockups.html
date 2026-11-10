@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Writing triggers, six ways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&family=Spline+Sans+Mono:wght@400..600&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f0dc; --card:#fffaee; --chip:#ece4cb; --line:#e2d8bc;
+  --ink:#1b1747; --ink-2:#4a4577; --ink-3:#7a76a3;
+  --ultra:#2b27c9; --violet:#6a4fd0; --violet-ink:#5638c4; --lime:#c9ec3f; --lime-2:#b5d92c;
+  --coral:#ff6f59; --coral-ink:#c23a26; --aqua:#62e6d8; --teal-ink:#0e6b66;
+  --sky-a:#2420b8; --sky-b:#2d4fd0; --sky-c:#1e86b0; --sky-d:#f3ad95;
+  --far:#b6a7f0; --far-2:#f0a9c0; --mid:#6a4fd0; --mid-2:#4f74d8; --near:#3a2c9c;
+  --meadow:#c8e64a; --meadow-2:#8dd05a; --pine-l:#3c8a76; --pine-d:#1e3a6e;
+  --on-sky:#fbf4e2; --on-sky-2:rgba(251,244,226,.82);
+  --shadow:#1b1747; --chip-lime:#e6f6a3; --chip-lime-ink:#2c3a07; --chip-coral:#ffd8cd; --chip-aqua:#c9f6ef; --chip-violet:#e4dcff;
+  --scrim:rgba(27,23,71,.06);
+  --display:"Young Serif","Iowan Old Style",Georgia,serif;
+  --body:"Schibsted Grotesk",ui-sans-serif,-apple-system,sans-serif;
+  --mono:"Spline Sans Mono",ui-monospace,Menlo,monospace;
+  --grain-o:.16; --blend:multiply;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#13113a; --card:#1e1a55; --chip:#28236a; --line:#2e2876;
+    --ink:#f7f0dc; --ink-2:#c7c1ea; --ink-3:#928cc4;
+    --violet-ink:#b9a8ff; --coral-ink:#ff9a86; --teal-ink:#7ff0e3;
+    --sky-a:#0b0a33; --sky-b:#1a1f72; --sky-c:#1d4f86; --sky-d:#a8607e;
+    --far:#5b4bb0; --far-2:#8a4f8e; --mid:#3b2c92; --mid-2:#2c3f8e; --near:#231a63;
+    --meadow:#7f9c2a; --meadow-2:#4c8a4c; --pine-l:#23615a; --pine-d:#0f1b45;
+    --shadow:#05041a; --chip-lime:rgba(201,236,63,.16); --chip-lime-ink:#d8f56a; --chip-coral:rgba(255,111,89,.2); --chip-aqua:rgba(98,230,216,.14); --chip-violet:rgba(185,168,255,.16);
+    --scrim:rgba(255,255,255,.04);
+    --grain-o:.12; --blend:screen; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#13113a; --card:#1e1a55; --chip:#28236a; --line:#2e2876;
+  --ink:#f7f0dc; --ink-2:#c7c1ea; --ink-3:#928cc4;
+  --violet-ink:#b9a8ff; --coral-ink:#ff9a86; --teal-ink:#7ff0e3;
+  --sky-a:#0b0a33; --sky-b:#1a1f72; --sky-c:#1d4f86; --sky-d:#a8607e;
+  --far:#5b4bb0; --far-2:#8a4f8e; --mid:#3b2c92; --mid-2:#2c3f8e; --near:#231a63;
+  --meadow:#7f9c2a; --meadow-2:#4c8a4c; --pine-l:#23615a; --pine-d:#0f1b45;
+  --shadow:#05041a; --chip-lime:rgba(201,236,63,.16); --chip-lime-ink:#d8f56a; --chip-coral:rgba(255,111,89,.2); --chip-aqua:rgba(98,230,216,.14); --chip-violet:rgba(185,168,255,.16);
+  --scrim:rgba(255,255,255,.04);
+  --grain-o:.12; --blend:screen; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0; color:var(--ink); background:var(--paper); font:15px/1.5 var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:var(--grain-o); mix-blend-mode:var(--blend);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+button,input,textarea{font:inherit; color:inherit}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px}
+
+/* sky header */
+.sky{position:relative; overflow:hidden; color:var(--on-sky); background:linear-gradient(180deg,var(--sky-a) 0%,var(--sky-b) 45%,var(--sky-c) 80%,var(--sky-d) 100%)}
+.sky .valley{position:absolute; left:50%; bottom:-1px; transform:translateX(-50%); display:flex; width:3600px; height:96px}
+.sky .valley svg{flex:none; width:1200px; height:96px; display:block}
+.sky .valley .flip{transform:scaleX(-1)}
+.far{fill:var(--far)} .far2{fill:var(--far-2)} .mid{fill:var(--mid)} .mid2{fill:var(--mid-2)}
+.near{fill:var(--near)} .mea{fill:var(--meadow)} .mea2{fill:var(--meadow-2)}
+.pl{fill:var(--pine-l)} .pd{fill:var(--pine-d)} .gr{fill:var(--paper)}
+.bar{position:relative; z-index:2; max-width:1180px; margin:0 auto; display:flex; align-items:center; gap:16px; padding:20px 24px 0}
+.brand{display:flex; align-items:center; gap:10px; font:400 22px/1 var(--display)}
+.brand svg{width:30px; height:30px}
+.status{display:inline-flex; align-items:center; gap:8px; font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-sky-2)}
+.gem{display:inline-block; width:8px; height:8px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.hero{position:relative; z-index:2; max-width:1180px; margin:0 auto; padding:34px 24px 132px}
+.hero h1{font:400 clamp(30px,5vw,50px)/1.05 var(--display); margin:0 0 12px; letter-spacing:-.015em; max-width:16em}
+.hero p{margin:0; max-width:42em; color:var(--on-sky-2); font-size:16.5px}
+
+/* page text */
+.intro{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:36px; padding:14px 0 30px}
+.intro p{margin:0 0 12px; color:var(--ink-2)}
+.intro b{color:var(--ink)}
+.toc{padding:16px 18px}
+.toc b{font:400 18px/1.2 var(--display)}
+.toc ol{margin:8px 0 0; padding-left:20px; color:var(--ink-2); font-size:14px}
+.toc a{color:var(--violet-ink); text-decoration:none; font-weight:600}
+.eyebrow{font:600 11.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--violet-ink)}
+h2{font:400 clamp(26px,3.4vw,34px)/1.1 var(--display); margin:8px 0 6px; letter-spacing:-.01em}
+.lede{font:400 18px/1.45 var(--display); color:var(--ink-2); margin:0 0 22px; max-width:40em}
+section.ap{padding:40px 0 30px; border-top:2px dashed var(--line)}
+section.ap:first-of-type{border-top:0}
+
+/* paper slips */
+.slip{position:relative; isolation:isolate; min-width:0}
+.slip::before,.slip::after{content:""; position:absolute; inset:0; clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.slip::before{background:var(--card); z-index:-1}
+.slip::after{background:var(--shadow); z-index:-2; transform:translate(5px,5px)}
+.slip.v::after{background:var(--violet)} .slip.l::after{background:var(--lime-2)} .slip.c::after{background:var(--coral)}
+
+/* mockup stage */
+.stage{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:30px; padding:22px; background:var(--scrim); outline:1px solid var(--line); align-items:start}
+.stage.one{grid-template-columns:minmax(0,1fr)}
+.stage.wide{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.cap{font:500 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin:0 0 10px; display:flex; gap:8px; align-items:center}
+.cap .n{background:var(--ink); color:var(--paper); padding:3px 6px; letter-spacing:0}
+.sheet{padding:20px 22px 18px}
+.sheet h3{font:400 23px/1.2 var(--display); margin:0 0 4px}
+.sheet .sub{font-size:13px; color:var(--ink-3); margin:0 0 14px}
+.big{font:400 19px/1.3 var(--display); margin:16px 0 6px; display:block}
+
+/* bits */
+.btn{display:inline-flex; align-items:center; gap:7px; border:0; cursor:pointer; font:600 13.5px/1 var(--body); padding:10px 14px; background:var(--chip); color:var(--ink);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); white-space:nowrap}
+.btn.go{background:var(--lime); color:#1b1747}
+.btn.quiet{background:transparent; color:var(--ink-3); padding:10px 6px}
+.btn.v{background:var(--violet); color:#fff}
+.btn.sm{padding:7px 10px; font-size:12.5px}
+.seg{display:inline-flex; background:var(--chip); padding:3px; gap:2px; clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+.seg span{font:600 12px/1 var(--body); padding:7px 10px; color:var(--ink-2); white-space:nowrap}
+.seg span.on{background:var(--card); color:var(--ink); box-shadow:2px 2px 0 var(--violet)}
+.foot{display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap}
+.grow{flex:1}
+.tile{display:inline-grid; place-items:center; color:#fff; font:600 9px/1 var(--body); border-radius:24%; flex:none; width:18px; height:18px; vertical-align:middle}
+.t-gm{background:#c23a26} .t-li{background:#5638c4} .t-gh{background:#1b1747} .t-sl{background:#0e6b66} .t-st{background:#2b27c9} .t-ca{background:#1e86b0} .t-no{background:#a8690f} .t-hs{background:#3c8a76} .t-zd{background:#6a4fd0}
+.kchip{display:inline-flex; align-items:center; gap:6px; font:500 12.5px/1.2 var(--body); color:var(--ink); background:var(--chip); padding:5px 9px 5px 6px; max-width:100%; vertical-align:middle}
+.kchip.ed{border-bottom:2px solid var(--violet)}
+.kchip.aq{background:var(--chip-aqua); color:var(--teal-ink)}
+.kchip.li{background:var(--chip-lime); color:var(--chip-lime-ink)}
+.kchip.co{background:var(--chip-coral); color:var(--coral-ink)}
+.kchip.vi{background:var(--chip-violet); color:var(--violet-ink)}
+.kchip .x{opacity:.55; margin-left:2px}
+.lock{width:11px; height:11px; flex:none}
+.linkish{color:var(--violet-ink); font-weight:600; text-decoration:underline; text-decoration-style:dotted; text-underline-offset:3px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--ink-3)}
+.local{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--teal-ink)}
+
+/* backtest list (same shape as the current builder preview) */
+.bt{margin-top:12px; padding:12px 14px; background:var(--chip-aqua)}
+.bt .sum{font-size:13.5px; color:var(--ink); margin-bottom:8px}
+.bt .s{display:grid; grid-template-columns:44px minmax(0,1fr); gap:8px; font-size:12.5px; align-items:baseline; margin-top:4px}
+.bt .s .p{font:500 11px/1.5 var(--mono); text-align:center; background:var(--card); color:var(--ink-3)}
+.bt .s.y .p{background:var(--lime); color:#1b1747}
+.bt .s span:last-child{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-2)}
+.bt .s.y span:last-child{color:var(--ink)}
+.bt .s.miss .p{background:var(--chip-coral); color:var(--coral-ink)}
+
+/* commentary */
+.notes{display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr); gap:22px; margin-top:26px}
+.notes h4{font:600 11.5px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin:0 0 8px}
+.notes p{margin:0; color:var(--ink-2); font-size:14.5px}
+.notes ul{margin:0; padding-left:0; list-style:none; font-size:14px; color:var(--ink-2)}
+.notes li{padding-left:18px; position:relative; margin-bottom:6px}
+.notes li::before{content:""; position:absolute; left:2px; top:.55em; width:8px; height:8px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); background:var(--lime-2)}
+.notes li.r::before{background:var(--coral)}
+.notes li.e::before{background:var(--violet)}
+.amb{margin-top:18px; padding:12px 16px; background:var(--chip-lime); color:var(--ink); font-size:14.5px; clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.amb b{font-weight:700}
+
+@media (max-width:900px){
+  .stage,.stage.wide{grid-template-columns:minmax(0,1fr); padding:16px}
+  .notes,.intro{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .bar{padding:18px 16px 0}
+  .hero{padding:26px 16px 120px}
+  .stage,.stage.wide{padding:12px 8px; gap:24px}
+  .sheet{padding:16px 14px 14px}
+}
+/* A1 one prompt */
+.composer{position:relative; background:var(--chip); border-bottom:2px solid var(--violet); padding:14px 14px 10px}
+.composer .txt{font:400 18px/1.55 var(--display); color:var(--ink); min-height:84px}
+.composer .txt mark{background:none; color:inherit; padding:0 1px; border-bottom:2px solid}
+mark.w1{border-color:var(--coral)!important} mark.w2{border-color:var(--aqua)!important} mark.w3{border-color:var(--lime-2)!important} mark.w4{border-color:var(--violet)!important}
+.composer .caret{display:inline-block; width:2px; height:1.1em; background:var(--violet); vertical-align:-3px; margin-left:1px}
+.composer .tools{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap}
+.composer .tools .grow{flex:1}
+.send{width:34px; height:34px; display:grid; place-items:center; background:var(--lime); color:#1b1747; clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px); font-weight:700}
+.nudges{margin-top:14px}
+.nudges .h{font:600 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px}
+.nudge{display:flex; gap:10px; align-items:flex-start; padding:8px 10px; background:var(--card); outline:1px dashed var(--far); outline-offset:-1px; margin-bottom:6px; font-size:13.5px; color:var(--ink-2)}
+.nudge b{color:var(--ink); font-weight:600}
+.nudge .plus{flex:none; font:600 13px/1.4 var(--mono); color:var(--violet-ink)}
+.ghosts{font-size:12.5px; color:var(--ink-3); margin-top:12px}
+.ghosts i{font-style:normal; color:var(--ink-2)}
+.reading{font:400 16.5px/2.15 var(--display)}
+.reading .lbl{font:600 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); display:block; margin:6px 0 -2px}
+.steps{margin:6px 0 0; padding:0; list-style:none; counter-reset:s}
+.steps li{counter-increment:s; display:flex; gap:10px; align-items:center; padding:7px 10px; background:var(--chip); margin-bottom:5px; font-size:14px; flex-wrap:wrap}
+.steps li::before{content:counter(s); font:600 12px/1 var(--mono); width:20px; height:20px; display:grid; place-items:center; background:var(--ink); color:var(--paper); flex:none}
+.steps li .grow{min-width:0}
+.steps li.add{background:transparent; outline:2px dashed var(--far); outline-offset:-2px; color:var(--violet-ink); font-weight:600}
+.steps li.add::before{content:"+"; background:var(--violet)}
+
+/* A2 gallery */
+.roles{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px}
+.roles span{font:600 12.5px/1 var(--body); padding:8px 11px; background:var(--chip); color:var(--ink-2)}
+.roles span.on{background:var(--ink); color:var(--paper)}
+.cards{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px}
+.gcard{padding:14px 14px 12px}
+.gcard .apps{display:flex; gap:4px; margin-bottom:8px}
+.gcard b{font:400 17px/1.25 var(--display); display:block}
+.gcard p{margin:6px 0 10px; font-size:13px; color:var(--ink-2)}
+.ladder{display:flex; flex-direction:column; gap:3px}
+.rung{display:grid; grid-template-columns:22px minmax(0,1fr); gap:8px; align-items:center; font-size:12.5px; color:var(--ink-2)}
+.rung i{font:600 10.5px/1 var(--mono); font-style:normal; text-align:center; padding:4px 0; background:var(--chip); color:var(--ink-3)}
+.rung.on i{background:var(--lime); color:#1b1747}
+.rung.on{color:var(--ink)}
+.gcard .meta{display:flex; justify-content:space-between; align-items:center; margin-top:10px; font:500 11px/1.3 var(--mono); color:var(--ink-3); gap:8px}
+.ready{color:var(--teal-ink)}
+.bigladder{display:flex; flex-direction:column; gap:8px; margin-top:6px}
+.br{display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px 12px; background:var(--chip)}
+.br .lv{font:600 12px/1 var(--mono); text-align:center; padding:6px 0; background:var(--card); color:var(--ink-3)}
+.br.on{background:var(--chip-lime)} .br.on .lv{background:var(--lime); color:#1b1747}
+.br.next{background:transparent; outline:2px dashed var(--far); outline-offset:-2px}
+.br b{font-weight:600; font-size:14px; display:block}
+.br small{color:var(--ink-3); font-size:12.5px; display:block}
+.br .tg{font:500 11px/1 var(--mono); color:var(--ink-3); white-space:nowrap}
+
+/* A3 conversation */
+.chat{display:flex; flex-direction:column; gap:10px}
+.bub{max-width:88%; padding:10px 13px; font-size:14.5px; line-height:1.45}
+.bub.me{align-self:flex-end; background:var(--violet); color:#fff; clip-path:polygon(0 0,100% 0,100% 100%,10px 100%,0 calc(100% - 10px))}
+.bub.am{align-self:flex-start; background:var(--chip); clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.bub.am .who{font:600 11px/1 var(--mono); color:var(--violet-ink); margin-bottom:6px; letter-spacing:.04em}
+.opts{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.opt{font:600 12.5px/1 var(--body); padding:8px 10px; background:var(--card); color:var(--ink); outline:1px solid var(--line)}
+.opt.on{background:var(--lime); color:#1b1747; outline:0}
+.qcount{font:500 11px/1 var(--mono); color:var(--ink-3); display:flex; gap:4px; align-items:center}
+.qcount i{width:18px; height:4px; background:var(--chip)} .qcount i.on{background:var(--violet)}
+.inbar{display:flex; gap:8px; margin-top:12px; align-items:center; background:var(--chip); border-bottom:2px solid var(--violet); padding:9px 10px; font-size:14px; color:var(--ink-3)}
+.recap{padding:12px 14px; background:var(--card); outline:2px solid var(--violet); outline-offset:-2px}
+.recap .row{display:grid; grid-template-columns:76px minmax(0,1fr); gap:10px; font-size:13.5px; padding:5px 0; border-top:1px solid var(--line)}
+.recap .row:first-of-type{border-top:0}
+.recap .row > span:first-child{font:600 11px/1.6 var(--mono); color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em}
+
+/* A4 show me */
+.recbar{display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--chip-coral); color:var(--ink); font-size:13.5px; flex-wrap:wrap}
+.recbar .dot{width:11px; height:11px; background:var(--coral); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.tl{margin:14px 0 0; padding:0; list-style:none; position:relative}
+.tl::before{content:""; position:absolute; left:10px; top:6px; bottom:6px; width:2px; background:var(--line)}
+.tl li{position:relative; display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:10px; align-items:start; padding:7px 0}
+.tl li .pin{width:22px; height:22px; display:grid; place-items:center; background:var(--card); position:relative; z-index:1}
+.tl li .pin .tile{width:18px; height:18px}
+.tl li b{font-weight:600; font-size:14px; display:block}
+.tl li small{color:var(--ink-3); font-size:12.5px; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.tl li time{font:500 11px/1.8 var(--mono); color:var(--ink-3)}
+.tl li.trig{background:var(--chip-lime); margin:0 -8px; padding:7px 8px}
+.tl li.trig .role{font:600 10.5px/1 var(--mono); color:var(--chip-lime-ink); letter-spacing:.06em; text-transform:uppercase}
+.tl li.do .role{font:600 10.5px/1 var(--mono); color:var(--violet-ink); letter-spacing:.06em; text-transform:uppercase}
+.tl li.skip{opacity:.5}
+.tl li.skip b{text-decoration:line-through}
+.choice{display:grid; gap:6px; margin-top:8px}
+.choice div{display:flex; gap:10px; align-items:flex-start; padding:9px 11px; background:var(--chip); font-size:13.5px}
+.choice div.on{background:var(--chip-lime); outline:2px solid var(--lime-2); outline-offset:-2px}
+.choice div i{flex:none; width:14px; height:14px; margin-top:3px; background:var(--card); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.choice div.on i{background:#1b1747}
+.choice b{font-weight:600}
+
+/* A5 from your week */
+.sugcard{padding:14px 16px; margin-bottom:16px}
+.sugcard .ev{display:flex; gap:12px; align-items:flex-end}
+.spark{display:flex; gap:3px; align-items:flex-end; height:38px; flex:none}
+.spark i{width:7px; background:var(--far)} .spark i.hi{background:var(--violet)}
+.sugcard .why{font-size:13px; color:var(--ink-2)}
+.sugcard .why b{color:var(--ink)}
+.sugcard .pitch{font:400 18.5px/1.3 var(--display); margin:10px 0 10px}
+.dial{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; margin:6px 0 4px}
+.dial span{font:600 11.5px/1.2 var(--body); text-align:center; padding:8px 4px; background:var(--chip); color:var(--ink-3)}
+.dial span.on{background:var(--lime); color:#1b1747}
+.dial span.fill{background:var(--chip-lime); color:var(--chip-lime-ink)}
+.dialcap{font-size:12.5px; color:var(--ink-3)}
+.mini{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+.drafted{margin-top:12px; padding:12px 14px 12px 16px; background:var(--chip-lime); font-size:14px; clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.drafted .by{font:500 11.5px/1 var(--mono); color:var(--ink-2); margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap}
+.drafted h5{font:400 17px/1.25 var(--display); margin:0 0 6px}
+.drafted ul{margin:0; padding-left:18px}
+.drafted li{margin:2px 0}
+.pager{display:flex; gap:6px; align-items:center; font:500 11.5px/1 var(--mono); color:var(--ink-3); margin-top:10px; flex-wrap:wrap}
+.pager span{padding:5px 7px; background:var(--chip)} .pager span.on{background:var(--ink); color:var(--paper)}
+
+/* A6 standing instructions */
+.doc{padding:22px 24px 18px}
+.doc .dh{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:6px}
+.doc .dh h3{font:400 24px/1.2 var(--display); margin:0}
+.para{display:grid; grid-template-columns:minmax(0,1fr) 190px; gap:18px; padding:12px 0; border-bottom:1px dashed var(--line)}
+.para .body{font:400 16px/1.6 var(--display); color:var(--ink)}
+.para .body .at{font:600 13.5px/1 var(--body); background:var(--chip); padding:2px 6px; white-space:nowrap}
+.para.sel{background:var(--chip-violet); margin:0 -12px; padding:12px; outline:2px solid var(--violet); outline-offset:-2px}
+.para.off .body{color:var(--ink-3)}
+.gut{display:flex; flex-direction:column; gap:5px; font-size:12px}
+.gut .k{display:flex; align-items:center; gap:6px; color:var(--ink-2)}
+.gut .fires{font:500 11px/1.3 var(--mono); color:var(--ink-3)}
+.gut .badge{align-self:flex-start; font:600 10.5px/1 var(--mono); padding:4px 6px; background:var(--chip-lime); color:var(--chip-lime-ink)}
+.gut .badge.ask{background:var(--chip); color:var(--ink-2)}
+.gut .badge.warn{background:var(--chip-coral); color:var(--coral-ink)}
+.slash{margin-top:10px; padding:8px; background:var(--card); box-shadow:4px 4px 0 var(--shadow); max-width:300px; font-size:13px}
+.slash div{padding:6px 8px; display:flex; gap:8px; align-items:center}
+.slash div.on{background:var(--chip-lime)}
+.slash .muted{font-size:11.5px}
+.newpara{font:400 16px/1.6 var(--display); color:var(--ink); padding:12px 0 2px}
+
+/* comparison */
+.tablewrap{overflow-x:auto; margin-top:10px}
+table{border-collapse:collapse; width:100%; min-width:680px; font-size:13.5px}
+th,td{text-align:left; padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font:600 11px/1.3 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+td:first-child{font:400 16px/1.25 var(--display); white-space:nowrap}
+.dots{white-space:nowrap; letter-spacing:2px; color:var(--violet-ink); font-family:var(--mono)}
+.rec{padding:22px 24px; margin-top:28px}
+.rec h3{font:400 24px/1.2 var(--display); margin:0 0 8px}
+.rec ol{padding-left:20px; margin:10px 0 0; color:var(--ink-2)}
+.rec li{margin-bottom:8px}
+.rec li b{color:var(--ink)}
+.flow{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:14px 0 4px}
+.flow .kchip{font-size:13px; padding:7px 10px}
+.flow .ar{font:600 14px var(--mono); color:var(--ink-3)}
+footer{padding:30px 0 60px; color:var(--ink-3); font-size:13px}
+
+@media (max-width:900px){ .cards{grid-template-columns:minmax(0,1fr)} .para{grid-template-columns:minmax(0,1fr); gap:8px} .gut{flex-direction:row; flex-wrap:wrap; gap:8px} }
+@media (max-width:560px){ .doc{padding:16px 14px} .reading{font-size:15.5px} .composer .txt{font-size:16.5px} }
+</style>
+</head>
+<body>
+<header class="sky">
+  <div class="bar">
+    <div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true">
+      <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/><path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+      <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/><path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+      <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/><path fill="#c8e64a" d="M0 54L64 50V54L54 64H10L0 54Z"/>
+      <path fill="#62e6d8" d="M22 64L31 52H35L29 64Z"/></svg>Ambient</div>
+    <span class="status"><span class="gem"></span>Design mockups</span>
+  </div>
+  <div class="hero">
+    <h1>Writing a trigger, six ways</h1>
+    <p>How someone tells Ambient what to watch for and what their agent should do, and how each approach pushes them past "notify me" towards flows that do real work.</p>
+  </div>
+  <div class="valley" aria-hidden="true">
+    <svg class="flip" viewBox="0 0 1200 96"><use href="#ridge"/></svg>
+    <svg viewBox="0 0 1200 96"><g id="ridge">
+      <path class="far" d="M0 60L90 30L170 52L260 18L350 50L430 26L520 54L610 22L700 48L800 14L880 46L960 24L1050 50L1130 20L1200 40V96H0Z"/>
+      <path class="far2" d="M260 18L300 52L350 50Z M800 14L840 50L880 46Z M610 22L640 52L700 48Z"/>
+      <path class="mid" d="M0 72L120 44L210 66L330 38L440 70L560 40L660 70L780 42L900 72L1010 44L1110 68L1200 50V96H0Z"/>
+      <path class="mid2" d="M330 38L380 72L440 70Z M780 42L820 74L900 72Z M120 44L160 70L210 66Z M1010 44L1050 70L1110 68Z"/>
+      <path class="near" d="M0 82L160 62L300 84L470 60L620 86L790 64L960 86L1090 66L1200 80V96H0Z"/>
+      <path class="mea" d="M0 90L220 78L420 92L640 80L860 94L1060 80L1200 88V96H0Z"/>
+      <path class="mea2" d="M220 78L300 92L420 92Z M860 94L960 84L1060 80Z"/>
+      <path class="pd" d="M1088 92L1100 52L1112 92Z"/><path class="pl" d="M1100 52L1112 92L1104 92Z"/>
+      <path class="pd" d="M1114 94L1124 62L1134 94Z"/><path class="pl" d="M1124 62L1134 94L1127 94Z"/>
+      <path class="pd" d="M70 94L80 66L90 94Z"/><path class="pl" d="M80 66L90 94L84 94Z"/>
+      <path class="gr" d="M0 94L1200 92V96H0Z"/>
+    </g></svg>
+    <svg class="flip" viewBox="0 0 1200 96"><use href="#ridge"/></svg>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <div>
+      <p><b>Today the builder asks for two halves:</b> "When…" (a sentence, matched to kinds of activity and an optional on-device meaning check) and "Then my agent should…". It works, but it frames a trigger as a notification rule, and people who live in chat boxes write one prompt, not a form.</p>
+      <p>Each approach below keeps Ambient's rules: the decision runs on this device or on a zero-retention model, every trigger is visible, and nothing saves until you've seen what it <b>would have caught</b> on your own recent activity. Each shows the writing screen, the "here's what I understood" state, and how it nudges people towards something bigger.</p>
+      <p class="muted" style="font-size:13.5px">All names, messages and companies are invented.</p>
+    </div>
+    <nav class="slip toc" aria-label="Approaches">
+      <b>The approaches</b>
+      <ol>
+        <li><a href="#a1">Just say it</a> · one prompt, read back as chips</li>
+        <li><a href="#a2">Recipe shelf</a> · flows by role, with an ambition ladder</li>
+        <li><a href="#a3">Talk it through</a> · Ambient asks two or three questions</li>
+        <li><a href="#a4">Show me, then hand off</a> · record it once</li>
+        <li><a href="#a5">From your week</a> · suggestions mined from your activity</li>
+        <li><a href="#a6">Standing instructions</a> · a page you write to your assistant</li>
+        <li><a href="#compare">Comparison and recommendation</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- ───────── 1. Just say it ───────── -->
+  <section class="ap" id="a1">
+    <div class="eyebrow">Approach 1</div>
+    <h2>Just say it</h2>
+    <p class="lede">One box, like the composer people already type into all day. Ambient reads the prompt back as a sentence of editable chips, and tests it on your last week before you save.</p>
+    <div class="stage" id="shot-a1">
+      <div>
+        <div class="cap"><span class="n">1a</span>Writing</div>
+        <div class="slip sheet">
+          <h3>What should happen?</h3>
+          <p class="sub">Describe it the way you'd ask a colleague. Mention apps, people, conditions, and as many steps as you like.</p>
+          <div class="composer">
+            <div class="txt"><mark class="w1">Whenever a customer emails</mark> <mark class="w2">about a refund</mark> <mark class="w2">and they've been with us over a year</mark>, <mark class="w3">look up their order in Stripe, draft a reply in my voice</mark> <mark class="w4">and open a Linear ticket in Support</mark><span class="caret"></span></div>
+            <div class="tools">
+              <span class="kchip"><span class="tile t-gm">Gm</span>@ an app</span>
+              <span class="kchip">⟲ Show me once</span>
+              <span class="grow"></span>
+              <span class="local"><svg class="lock" viewBox="0 0 12 12"><path fill="currentColor" d="M3 5V3.5a3 3 0 0 1 6 0V5h1v7H2V5Zm1.5 0h3V3.5a1.5 1.5 0 0 0-3 0Z"/></svg>read on this device</span>
+              <span class="send">↵</span>
+            </div>
+          </div>
+          <div class="nudges">
+            <div class="h">Make it do more</div>
+            <div class="nudge"><span class="plus">+</span><span><b>If the order is under $50, refund it</b> and tell me afterwards. <span class="muted">Stripe is in your apps.</span></span></div>
+            <div class="nudge"><span class="plus">+</span><span><b>Post the ticket link in #support</b> so the team sees it.</span></div>
+            <div class="nudge"><span class="plus">+</span><span><b>If they've asked before</b>, flag it as a repeat and include the earlier thread.</span></div>
+          </div>
+          <p class="ghosts">Others write things like <i>"When a PR I'm tagged on goes quiet for a day, nudge the author with a summary of what's blocking"</i></p>
+        </div>
+      </div>
+      <div>
+        <div class="cap"><span class="n">1b</span>Here's what I understood</div>
+        <div class="slip sheet v">
+          <div class="reading">
+            <span class="lbl">Watch</span>
+            <span class="kchip ed"><span class="tile t-gm">Gm</span>Email to you · Gmail</span>
+            <span class="kchip ed"><span class="tile t-hs">HS</span>New conversation · Help Scout</span>
+            <span class="lbl">Only when</span>
+            <span class="kchip aq ed"><svg class="lock" viewBox="0 0 12 12"><path fill="currentColor" d="M3 5V3.5a3 3 0 0 1 6 0V5h1v7H2V5Zm1.5 0h3V3.5a1.5 1.5 0 0 0-3 0Z"/></svg>it's asking for a refund</span>
+            <span class="kchip ed">sender is a customer</span>
+            <span class="kchip co ed">over a year ⚠ I can't see this</span>
+          </div>
+          <div class="bt">
+            <div class="sum">On your last <b>214 emails</b> (7 days) it would have fired <b>5 times</b>.</div>
+            <div class="s y"><span class="p">94%</span><span>Rhea Okafor: Hi, I'd like a refund for order #4471, it arrived cracked</span></div>
+            <div class="s y"><span class="p">88%</span><span>Tom Lindqvist: Charged twice this month, can you reverse one?</span></div>
+            <div class="s y"><span class="p">71%</span><span>Mina Sato: Is it too late to return the annual plan?</span></div>
+            <div class="s"><span class="p">22%</span><span>Stripe: Your payout of $3,120.44 is on the way</span></div>
+            <div class="s"><span class="p">9%</span><span>Rhea Okafor: Thanks, refund received!</span></div>
+          </div>
+          <span class="lbl" style="font:600 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); display:block; margin:16px 0 4px">Then Claude Code will</span>
+          <ol class="steps">
+            <li><span class="tile t-st">St</span><span class="grow">Find their order and plan in Stripe</span><span class="kchip li">reads</span></li>
+            <li><span class="tile t-gm">Gm</span><span class="grow">Draft a reply in your voice</span><span class="kchip">draft only</span></li>
+            <li><span class="tile t-li">Li</span><span class="grow">Open a ticket in Linear · Support</span><span class="kchip co">writes, asks first</span></li>
+            <li class="add"><span class="grow">Add a step</span></li>
+          </ol>
+          <div class="foot">
+            <div class="seg"><span class="on">Ask me first</span><span>Run automatically</span></div>
+            <span class="grow"></span><span class="btn quiet">Edit prompt</span><span class="btn go">Save trigger</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> as you type, "Make it do more" offers the next step using apps it has actually seen you use (Stripe, Slack), and the step list ends in a dashed "Add a step". The coloured underlines show which words became which chip, so long prompts stay legible.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>Matches the habit people already have: write one prompt. The structure (watch, only when, then) still exists, but Ambient produces it, and you correct it rather than fill it in. Anything it can't check, like "over a year", is said out loud in coral instead of silently dropped.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>Fastest path from an idea to a saved trigger</li><li>Invites long, multi-step prompts</li>
+        <li class="r">A misread is easy to miss if people skim the chips</li><li class="r">Blank box: weak for people with no idea yet</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">Prompt → trigger program compiler (kinds, field conditions, NL condition, steps)</li>
+        <li class="e">Span map from words to parts, for the underlines</li>
+        <li class="e">"Can't check" verdicts for conditions with no field</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── 2. Recipe shelf ───────── -->
+  <section class="ap" id="a2">
+    <div class="eyebrow">Approach 2</div>
+    <h2>Recipe shelf, with an ambition ladder</h2>
+    <p class="lede">A gallery of rich flows grouped by role, each shown as a ladder from "tell me" to "do the whole job". You pick a rung, remix the words, and Ambient checks which of the apps it needs you actually use.</p>
+    <div class="stage wide" id="shot-a2">
+      <div>
+        <div class="cap"><span class="n">2a</span>Browsing</div>
+        <div class="slip sheet">
+          <h3>Start from a recipe</h3>
+          <p class="sub">Flows other people run every day. Ones marked ready only use apps Ambient already sees on this computer.</p>
+          <div class="roles"><span class="on">Founder</span><span>Engineer</span><span>Sales</span><span>Support</span><span>Recruiting</span><span>Just me</span></div>
+          <div class="cards">
+            <div class="slip gcard l">
+              <div class="apps"><span class="tile t-gm">Gm</span><span class="tile t-st">St</span><span class="tile t-no">No</span></div>
+              <b>Investor update, written for you</b>
+              <p>When a month closes in Stripe, gather the numbers and wins.</p>
+              <div class="ladder">
+                <div class="rung on"><i>1</i>Remind me it's due</div>
+                <div class="rung on"><i>2</i>Pull MRR, churn, runway</div>
+                <div class="rung on"><i>3</i>Draft the update in Notion</div>
+                <div class="rung"><i>4</i>Email it to the list once I approve</div>
+              </div>
+              <div class="meta"><span class="ready">● ready</span><span>~1×/month</span></div>
+            </div>
+            <div class="slip gcard">
+              <div class="apps"><span class="tile t-ca">Ca</span><span class="tile t-gm">Gm</span><span class="tile t-hs">Hu</span></div>
+              <b>Walk into every call prepared</b>
+              <p>When a meeting with someone new is 30 minutes away.</p>
+              <div class="ladder">
+                <div class="rung on"><i>1</i>Who they are, one line</div>
+                <div class="rung on"><i>2</i>Our last emails, summarised</div>
+                <div class="rung"><i>3</i>Three questions to ask</div>
+                <div class="rung"><i>4</i>Follow-up drafted after the call</div>
+              </div>
+              <div class="meta"><span class="ready">● ready</span><span>~9×/week</span></div>
+            </div>
+            <div class="slip gcard">
+              <div class="apps"><span class="tile t-sl">Sl</span><span class="tile t-li">Li</span></div>
+              <b>Nothing customers say gets lost</b>
+              <p>When a customer reports a bug in a shared Slack channel.</p>
+              <div class="ladder">
+                <div class="rung on"><i>1</i>Tell me</div>
+                <div class="rung"><i>2</i>File it in Linear with the thread</div>
+                <div class="rung"><i>3</i>Reply in thread with the ticket</div>
+                <div class="rung"><i>4</i>Tell them when it ships</div>
+              </div>
+              <div class="meta"><span class="muted">needs Linear once</span><span>~4×/week</span></div>
+            </div>
+            <div class="slip gcard">
+              <div class="apps"><span class="tile t-gm">Gm</span><span class="tile t-zd">Ds</span></div>
+              <b>Contracts never sit unsigned</b>
+              <p>When a DocuSign envelope is still open after two days.</p>
+              <div class="ladder">
+                <div class="rung on"><i>1</i>List what's waiting</div>
+                <div class="rung"><i>2</i>Draft a polite nudge</div>
+                <div class="rung"><i>3</i>Send it in my voice</div>
+                <div class="rung"><i>4</i>Update the deal in HubSpot</div>
+              </div>
+              <div class="meta"><span class="muted">needs DocuSign once</span><span>~2×/week</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="cap"><span class="n">2b</span>Remixing, with what it would have caught</div>
+        <div class="slip sheet v">
+          <h3>Walk into every call prepared</h3>
+          <p class="sub">Edit any rung in your own words. Higher rungs do more before you look.</p>
+          <div class="bigladder">
+            <div class="br on"><span class="lv">1</span><span><b>One line on who they are</b><small>From their email signature and LinkedIn</small></span><span class="tg">reads</span></div>
+            <div class="br on"><span class="lv">2</span><span><b>Our last emails, summarised</b><small>Only threads with their company</small></span><span class="tg">reads</span></div>
+            <div class="br on"><span class="lv">3</span><span><b>Three questions I should ask</b><small>“…and one thing I promised them last time”</small></span><span class="tg">thinks</span></div>
+            <div class="br next"><span class="lv">4</span><span><b>Draft the follow-up after the call ends</b><small>Uses your Granola notes · one more step up</small></span><span class="tg">+ add</span></div>
+          </div>
+          <div class="bt">
+            <div class="sum">Last week this would have run before <b>7 of your 23 meetings</b> (the ones with someone new).</div>
+            <div class="s y"><span class="p">Mon</span><span>Intro: Priya Raman (Fernway Capital) · 10:30</span></div>
+            <div class="s y"><span class="p">Tue</span><span>Demo for Halden Logistics · 14:00</span></div>
+            <div class="s y"><span class="p">Thu</span><span>Coffee with Joel Ambrose · 09:00</span></div>
+            <div class="s"><span class="p">–</span><span>Weekly team sync · skipped, everyone's internal</span></div>
+          </div>
+          <div class="foot">
+            <div class="seg"><span class="on">Ask me first</span><span>Run automatically</span></div>
+            <span class="grow"></span><span class="btn quiet">Back</span><span class="btn go">Save trigger</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> the ladder makes "notify me" visibly the bottom rung. Cards open with three rungs already on, and the next one waits as a dashed outline. Frequency ("~9×/week") comes from your own activity, which tells you how much time the flow gives back.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>Most people don't know what proactive agents can do until they see a good one. A shelf of rich recipes sets the bar high, and remixing is less intimidating than a blank page.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>Shows the ceiling on day one</li><li>Recipes can be shared between people</li>
+        <li class="r">Feels generic if your role isn't there</li><li class="r">Someone has to write and maintain good recipes</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">Recipes as parameterised trigger programs</li>
+        <li class="e">"Ready" check: does this machine see these kinds?</li>
+        <li class="e">Frequency estimate from the activity catalog</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── 3. Talk it through ───────── -->
+  <section class="ap" id="a3">
+    <div class="eyebrow">Approach 3</div>
+    <h2>Talk it through</h2>
+    <p class="lede">You say something loose. Ambient asks at most three questions back, each with tappable answers drawn from your own activity, and each one quietly raises the stakes: "and then what?"</p>
+    <div class="stage" id="shot-a3">
+      <div>
+        <div class="cap"><span class="n">3a</span>The conversation</div>
+        <div class="slip sheet">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px"><h3 style="margin:0">New trigger</h3><span class="grow"></span><span class="qcount">question 2 of 3 <i class="on"></i><i class="on"></i><i></i></span></div>
+          <div class="chat">
+            <div class="bub me">help me stay on top of PR reviews</div>
+            <div class="bub am"><div class="who">AMBIENT</div>Which moment should start it? I can see these in GitHub on this computer:
+              <div class="opts"><span class="opt on">Someone requests my review</span><span class="opt">A PR I opened gets a comment</span><span class="opt">A review sits for a day</span></div></div>
+            <div class="bub me">Someone requests my review</div>
+            <div class="bub am"><div class="who">AMBIENT</div>Last week that was 11 times. When it happens, how far should Claude Code go before you look?
+              <div class="opts"><span class="opt">Just tell me</span><span class="opt">Summarise the change</span><span class="opt on">Check it out, run the tests, and draft review comments</span><span class="opt">Something else…</span></div></div>
+            <div class="bub me">Check it out, run the tests, and draft review comments</div>
+            <div class="bub am"><div class="who">AMBIENT</div>Good. Last one: anything it should skip, or anyone to keep in the loop?
+              <div class="opts"><span class="opt">Skip drafts and bots</span><span class="opt">Post a summary in #eng-reviews</span><span class="opt">Only repos in acme/</span></div></div>
+          </div>
+          <div class="inbar"><span class="grow">Skip dependabot, and if tests fail tell the author…</span><span class="send" style="width:28px;height:28px">↵</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="cap"><span class="n">3b</span>Here's what we agreed</div>
+        <div class="slip sheet v">
+          <h3>Review prep, done before you open it</h3>
+          <p class="sub">Written from our conversation. Tap any line to change it.</p>
+          <div class="recap">
+            <div class="row"><span>When</span><span><span class="kchip"><span class="tile t-gh">Gh</span>Review requested from you · GitHub</span></span></div>
+            <div class="row"><span>Skip</span><span>Draft PRs, and anything from dependabot or renovate</span></div>
+            <div class="row"><span>Then</span><span>Check out the branch, run the tests, draft review comments on the diff. If tests fail, draft a note to the author with the failing output.</span></div>
+            <div class="row"><span>Tell</span><span>Me, with the draft ready to post. Nothing goes to GitHub until I press send.</span></div>
+          </div>
+          <div class="bt">
+            <div class="sum">Last 7 days: <b>11 review requests</b>, it would have prepared <b>9</b>.</div>
+            <div class="s y"><span class="p">✓</span><span>acme/web #812 · “Move billing page to server components”</span></div>
+            <div class="s y"><span class="p">✓</span><span>acme/api #455 · “Rate-limit the export endpoint”</span></div>
+            <div class="s y"><span class="p">✓</span><span>acme/web #809 · “Fix dark mode on invoices”</span></div>
+            <div class="s"><span class="p">skip</span><span>acme/api #451 · dependabot · bump undici to 6.21</span></div>
+            <div class="s"><span class="p">skip</span><span>acme/web #806 · draft · “WIP: new onboarding”</span></div>
+          </div>
+          <div class="foot">
+            <span class="kchip vi">Claude Code · this repo's folder</span>
+            <span class="grow"></span><span class="btn quiet">Keep talking</span><span class="btn go">Save trigger</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> the middle question is always "how far should it go?", with answers ordered from least to most, and the most ambitious one is the widest button. Counts in the questions ("11 times last week") make the payoff concrete.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>Vague intent is the normal starting point ("stay on top of reviews"). Asking back turns it into a precise trigger without the person ever seeing the word "trigger", and the answer options teach what's possible.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>Works from a vague start</li><li>Each question can carry an example of a bolder answer</li>
+        <li class="r">Slower for people who already know what they want</li><li class="r">A fourth question would feel like a form in disguise</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">A model that picks the most useful next question (on device or zero-retention)</li>
+        <li class="e">Answer options built from the activity catalog</li>
+        <li class="e">Same trigger-program output as approach 1</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── 4. Show me ───────── -->
+  <section class="ap" id="a4">
+    <div class="eyebrow">Approach 4</div>
+    <h2>Show me, then hand off</h2>
+    <p class="lede">Press record and do the whole chore once, the way you always do. Ambient turns the first step into the trigger and the rest into the agent's instructions, and asks how much of it to take over next time.</p>
+    <div class="stage" id="shot-a4">
+      <div>
+        <div class="cap"><span class="n">4a</span>Watching you do it</div>
+        <div class="slip sheet c">
+          <h3>Show me once</h3>
+          <p class="sub">Do it in your apps as usual. Ambient only lists what it sees while this is on.</p>
+          <div class="recbar"><span class="dot"></span><b>Watching</b><span>· 2:41</span><span class="grow"></span><span class="btn sm">Stop</span></div>
+          <ol class="tl">
+            <li class="trig"><span class="pin"><span class="tile t-hs">HS</span></span><span><span class="role">this starts it</span><b>New conversation arrived</b><small>“Invoice shows the wrong VAT number” · Kestrel Foods</small></span><time>0:00</time></li>
+            <li class="do"><span class="pin"><span class="tile t-st">St</span></span><span><span class="role">then</span><b>You searched customers</b><small>“kestrel”</small></span><time>0:18</time></li>
+            <li class="do"><span class="pin"><span class="tile t-st">St</span></span><span><span class="role">then</span><b>You opened an invoice</b><small>in_1Q8…Kf · £1,284.00</small></span><time>0:31</time></li>
+            <li class="skip"><span class="pin"><span class="tile t-sl">Sl</span></span><span><b>You read #random</b><small>probably unrelated, left out</small></span><time>1:02</time></li>
+            <li class="do"><span class="pin"><span class="tile t-st">St</span></span><span><span class="role">then</span><b>You updated the customer's tax ID</b><small>changed a field</small></span><time>1:40</time></li>
+            <li class="do"><span class="pin"><span class="tile t-hs">HS</span></span><span><span class="role">then</span><b>You replied</b><small>“Fixed, a corrected invoice is on its way…”</small></span><time>2:30</time></li>
+          </ol>
+        </div>
+      </div>
+      <div>
+        <div class="cap"><span class="n">4b</span>What should happen next time?</div>
+        <div class="slip sheet v">
+          <h3>Next time someone reports a billing detail is wrong…</h3>
+          <p class="sub">I'll start on any new Help Scout conversation that's about invoice details.</p>
+          <div class="choice">
+            <div><i></i><span><b>Remind me</b> and link the customer in Stripe</span></div>
+            <div><i></i><span><b>Get it ready:</b> find the invoice, note what's wrong, draft the reply</span></div>
+            <div class="on"><i></i><span><b>Do what I did:</b> fix the field in Stripe, reissue the invoice, draft the reply. Ask before the fix.</span></div>
+          </div>
+          <div class="bt">
+            <div class="sum">On the last <b>63 conversations</b> it would have started on <b>4</b>.</div>
+            <div class="s y"><span class="p">91%</span><span>Kestrel Foods: Invoice shows the wrong VAT number</span></div>
+            <div class="s y"><span class="p">84%</span><span>Orbit Dental: Can you put our new address on March's invoice?</span></div>
+            <div class="s y"><span class="p">66%</span><span>Pell &amp; Co: PO number missing from the invoice</span></div>
+            <div class="s miss"><span class="p">38%</span><span>Halden: billing email should go to accounts@ <i class="muted">· missed? tap to include</i></span></div>
+          </div>
+          <p class="sub" style="margin:10px 0 0">Seen once, so I'll treat what you did as one example. Show me another to make it surer.</p>
+          <div class="foot"><span class="btn sm">Show me another</span><span class="grow"></span><span class="btn go">Save trigger</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> the recording already contains the whole chore, so the default handoff is "do what I did", not "notify me". The timeline makes chaining across apps the natural unit, without anyone having to describe it.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>Some chores are easier to do than to describe. This grows the existing "Show me once" from finding one kind of event into capturing a whole workflow, which is Ambient's unique advantage: it can see the steps.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>No writing at all; works for unfamiliar apps</li><li>Captures multi-app flows people wouldn't think to describe</li>
+        <li class="r">One recording generalises poorly; needs a second example</li><li class="r">Agents may not be able to replay every step (no API)</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">Recording of a session of kinds, in order, with relevance filtering</li>
+        <li class="e">Turning a recorded sequence into agent instructions</li>
+        <li class="e">Per-step "can the agent do this?" check</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── 5. From your week ───────── -->
+  <section class="ap" id="a5">
+    <div class="eyebrow">Approach 5</div>
+    <h2>From your week</h2>
+    <p class="lede">Ambient already sees which things recur. It proposes triggers from your own patterns, with the evidence, and a dial that starts one notch higher than "tell me". Accepting shows what the agent would have produced on a real past event.</p>
+    <div class="stage" id="shot-a5">
+      <div>
+        <div class="cap"><span class="n">5a</span>Suggestions</div>
+        <div class="slip sheet">
+          <h3>Things you do often</h3>
+          <p class="sub">Found in your activity on this computer. Nothing left it to find these.</p>
+          <div class="slip sugcard l">
+            <div class="ev">
+              <div class="spark" aria-hidden="true"><i style="height:30%"></i><i class="hi" style="height:90%"></i><i class="hi" style="height:70%"></i><i style="height:20%"></i><i class="hi" style="height:100%"></i><i class="hi" style="height:60%"></i><i style="height:10%"></i></div>
+              <div class="why"><span class="tile t-gh">Gh</span> You opened <b>14 pull requests</b> this week, most between 9 and 10am, and wrote the description by hand each time.</div>
+            </div>
+            <div class="pitch">Want a reviewer brief written for every PR you open?</div>
+            <div class="dial"><span class="fill">Tell me</span><span class="on">Draft it</span><span>Post it</span><span>+ ping reviewer</span></div>
+            <div class="dialcap">Claude Code drafts the description and a “where to look first” note. You post it.</div>
+            <div class="mini"><span class="btn go sm">Try it on last Tuesday's PR</span><span class="btn quiet sm">Not useful</span></div>
+          </div>
+          <div class="slip sugcard">
+            <div class="ev">
+              <div class="spark" aria-hidden="true"><i style="height:40%"></i><i style="height:40%"></i><i class="hi" style="height:80%"></i><i style="height:40%"></i><i class="hi" style="height:100%"></i><i style="height:20%"></i><i style="height:0"></i></div>
+              <div class="why"><span class="tile t-ca">Ca</span><span class="tile t-gm">Gm</span> After <b>6 external calls</b> you sent a follow-up email within the hour. Two calls got none.</div>
+            </div>
+            <div class="pitch">Draft the follow-up as soon as a call ends?</div>
+            <div class="dial"><span class="fill">Remind me</span><span class="on">Draft it</span><span>Draft + calendar holds</span><span>Send if I don't edit</span></div>
+          </div>
+          <div class="slip sugcard">
+            <div class="why"><span class="tile t-sl">Sl</span> <b>“Can you send me…”</b> came up 9 times in DMs. You answered 7 by digging up a file.</div>
+            <div class="pitch">Find the file and draft the reply when someone asks?</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="cap"><span class="n">5b</span>What it would have made</div>
+        <div class="slip sheet v">
+          <h3>Reviewer brief for every PR you open</h3>
+          <p class="sub">Replayed on a real event from your week. This is what you'd have got.</p>
+          <div class="kchip"><span class="tile t-gh">Gh</span>You opened a PR · acme/web #803 · Tue 9:14</div>
+          <div class="drafted">
+            <div class="by"><span>Claude Code</span><span>· drafted in 41s</span><span>· not posted</span></div>
+            <h5>Split checkout into steps, keep cart state in the URL</h5>
+            <ul>
+              <li><b>Why:</b> one long form lost 18% of people at the address step</li>
+              <li><b>Look first at</b> <code>checkout/state.ts</code>: the URL encoder is the risky part</li>
+              <li><b>Not in this PR:</b> payment step styling (follow-up #804)</li>
+              <li><b>Tested:</b> 3 new e2e flows, all green locally</li>
+            </ul>
+          </div>
+          <div class="pager"><span>Mon #799</span><span class="on">Tue #803</span><span>Tue #805</span><span>Wed #811</span><span>+10 more</span></div>
+          <div class="nudges" style="margin-top:14px">
+            <div class="h">One notch further</div>
+            <div class="nudge"><span class="plus">+</span><span><b>Post it as the PR description</b> and request a review from whoever last touched these files.</span></div>
+          </div>
+          <div class="foot"><div class="seg"><span class="on">Ask me first</span><span>Run automatically</span></div><span class="grow"></span><span class="btn go">Turn it on</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> the dial opens at "Draft it", not "Tell me", and the replay shows a finished artifact instead of a match list. "One notch further" appears after you've seen the output be good, which is when people say yes to more.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>The hardest part is knowing what to automate. Ambient has the evidence, locally. Suggestions that cite your own numbers feel earned rather than salesy, and a replay on last Tuesday is the most convincing backtest there is.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>Zero effort to start; high hit rate</li><li>Backtest becomes a preview of real output</li>
+        <li class="r">Can feel watched if the tone is wrong</li><li class="r">Replaying with a real agent costs time and tokens</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">Local pattern mining over kinds (frequency, time of day, “X then Y”)</li>
+        <li class="e">Dry-run of an agent on a past event, no side effects</li>
+        <li class="e">Suggestion dismissals remembered</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── 6. Standing instructions ───────── -->
+  <section class="ap" id="a6">
+    <div class="eyebrow">Approach 6</div>
+    <h2>Standing instructions</h2>
+    <p class="lede">Triggers aren't separate forms; they're paragraphs on one page you write to your assistant, like a brief to a new chief of staff. Each paragraph compiles to a trigger, and the margin shows what it watches and how often it would have fired.</p>
+    <div class="stage one" id="shot-a6">
+      <div>
+        <div class="cap"><span class="n">6</span>The page, with one paragraph selected</div>
+        <div class="slip doc">
+          <div class="dh"><h3>How I'd like things handled</h3><span class="muted" style="font-size:13px">4 standing instructions · 2 run on their own</span><span class="grow"></span><span class="kchip vi">Claude Code</span></div>
+          <div class="para">
+            <div class="body">When an investor or a customer emails me, give me a two-line summary and tell me whether it needs me today. Don't bother with newsletters or receipts.</div>
+            <div class="gut"><span class="k"><span class="tile t-gm">Gm</span>Email to you</span><span class="fires">would have fired 23× last week</span><span class="badge">runs on its own</span></div>
+          </div>
+          <div class="para sel">
+            <div class="body">If someone in <span class="at"><span class="tile t-sl">Sl</span> #customers</span> reports something broken, check whether there's already a <span class="at"><span class="tile t-li">Li</span> Linear</span> issue. If there is, reply in the thread with the link; if not, file one with the steps they gave, and tell them we're on it. If it sounds like data loss, page me straight away.</div>
+            <div class="gut"><span class="k"><span class="tile t-sl">Sl</span>Message in #customers</span><span class="k"><svg class="lock" viewBox="0 0 12 12"><path fill="currentColor" d="M3 5V3.5a3 3 0 0 1 6 0V5h1v7H2V5Zm1.5 0h3V3.5a1.5 1.5 0 0 0-3 0Z"/></svg>reports a bug</span><span class="fires">4× last week · 3 new issues, 1 duplicate</span><span class="badge ask">asks me first</span></div>
+          </div>
+          <div class="bt" style="margin:10px 0 4px">
+            <div class="sum">This paragraph on last week's <b>186 messages</b> in #customers:</div>
+            <div class="s y"><span class="p">93%</span><span>Dana (Orbit Dental): export to CSV just spins forever since this morning → new issue</span></div>
+            <div class="s y"><span class="p">87%</span><span>Leo (Pell &amp; Co): the date picker shows US format again → duplicate of ENG-2210</span></div>
+            <div class="s y"><span class="p">81%</span><span>Ama (Kestrel): two invoices vanished from the list ⚑ sounds like data loss → page you</span></div>
+            <div class="s"><span class="p">12%</span><span>Leo (Pell &amp; Co): thanks, that fixed it!</span></div>
+          </div>
+          <div class="para">
+            <div class="body">Thirty minutes before any call with someone I haven't met, tell me who they are and what we last talked about.</div>
+            <div class="gut"><span class="k"><span class="tile t-ca">Ca</span>Meeting soon</span><span class="fires">7× last week</span><span class="badge">runs on its own</span></div>
+          </div>
+          <div class="para off">
+            <div class="body">When I'm tagged on a pull request that's been quiet for a day, nudge the author with what's blocking it.</div>
+            <div class="gut"><span class="k"><span class="tile t-gh">Gh</span>Review requested</span><span class="badge warn">“quiet for a day” needs a timer · coming soon</span></div>
+          </div>
+          <div class="newpara">When a candidate replies to <span class="at">/</span><span class="caret" style="display:inline-block;width:2px;height:1em;background:var(--violet);vertical-align:-2px"></span></div>
+          <div class="slash">
+            <div class="on"><span class="tile t-gm">Gm</span><span class="grow">Gmail</span><span class="muted">seen today</span></div>
+            <div><span class="tile t-hs">As</span><span class="grow">Ashby</span><span class="muted">website · 31 kinds</span></div>
+            <div><span class="tile t-li">LI</span><span class="grow">LinkedIn messages</span><span class="muted">website</span></div>
+            <div><span class="muted">⟲ Not listed? Show me once</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="amb"><b>How it pushes ambition:</b> paragraphs invite branching ("if there is…, if not…, if it sounds like…") in a way a single field never does. Seeing several instructions together makes gaps obvious, and the page reads like a job description for your agent, which nudges people to give it more of the job.</div>
+    <div class="notes">
+      <div><h4>Why</h4><p>People already write standing instructions (CLAUDE.md, a brief to an assistant). This makes triggers feel like delegating, not configuring, and the whole set is visible on one page, which suits Ambient's "always visible" rule.</p></div>
+      <div><h4>Strengths and risks</h4><ul>
+        <li>Rich branching logic in plain prose</li><li>All triggers reviewable in one read</li>
+        <li class="r">Editing a paragraph silently changes a live trigger; needs a clear "saved, re-tested" moment</li><li class="r">Long paragraphs can hide two triggers in one</li></ul></div>
+      <div><h4>Needs from the engine</h4><ul>
+        <li class="e">Paragraph → trigger program, with branches as steps</li>
+        <li class="e">Diff and re-backtest on edit before it goes live</li>
+        <li class="e">Splitting a paragraph that holds two triggers</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ───────── Comparison ───────── -->
+  <section class="ap" id="compare">
+    <div class="eyebrow">Side by side</div>
+    <h2>Comparison</h2>
+    <p class="lede">More diamonds is better, except engine cost, where more means more work.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Approach</th><th>Time to first trigger</th><th>Ambition it invites</th><th>Catches misreads</th><th>Works from a vague idea</th><th>Engine cost</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td>1 · Just say it</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆</td><td class="dots">◆◆◆</td><td>People who know what they want</td></tr>
+          <tr><td>2 · Recipe shelf</td><td class="dots">◆◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆</td><td>New users, sharing between teams</td></tr>
+          <tr><td>3 · Talk it through</td><td class="dots">◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆</td><td>Fuzzy goals</td></tr>
+          <tr><td>4 · Show me</td><td class="dots">◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆</td><td class="dots">◆◆</td><td class="dots">◆◆◆◆</td><td>Repetitive multi-app chores</td></tr>
+          <tr><td>5 · From your week</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆◆◆</td><td>Everyone, after a few days of use</td></tr>
+          <tr><td>6 · Standing instructions</td><td class="dots">◆◆</td><td class="dots">◆◆◆◆</td><td class="dots">◆◆</td><td class="dots">◆◆</td><td class="dots">◆◆◆</td><td>Power users with many triggers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="slip rec l">
+      <h3>Recommendation: build "Just say it" first, as one box with three ways in</h3>
+      <p style="margin:0; color:var(--ink-2)">Approach 1 is the core every other approach needs anyway: one prompt compiled into a trigger program, read back as editable chips, with a backtest before saving. Build it first, then let the others feed the same box rather than living as separate screens.</p>
+      <div class="flow">
+        <span class="kchip li">From your week (5)</span><span class="ar">+</span><span class="kchip li">Recipes by role (2)</span><span class="ar">→ fill</span>
+        <span class="kchip vi">One prompt box (1)</span><span class="ar">→</span><span class="kchip aq">Reading + backtest</span><span class="ar">→</span><span class="kchip">Saved</span>
+      </div>
+      <ol>
+        <li><b>Now: approach 1 replaces the When/Then sheet.</b> Keep "Show me once" (4) as a chip in the composer, so the event-finding fallback survives. When the reading is unsure, ask one inline question (3) instead of a whole conversation.</li>
+        <li><b>Next: empty state.</b> Above the box, show two suggestions from your week (5) once there's enough activity, and role recipes (2) before that. Both just pre-fill the box, so there's one editor to maintain. The ladder's "how far should it go?" becomes the "Make it do more" nudges.</li>
+        <li><b>Later: the trigger list becomes the standing-instructions page (6)</b>, which needs no new compiler, only edit-and-re-test. Full workflow recording (4b) waits until agents can reliably replay steps across apps.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+<footer class="wrap">Static mockups for discussion. Nothing on this page is interactive, and all people, companies and messages are invented.</footer>
+</body>
+</html>

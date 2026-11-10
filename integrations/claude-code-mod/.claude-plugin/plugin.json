@@ -1,0 +1,14 @@
+{
+  "name": "ambient-triggers",
+  "version": "0.1.0",
+  "description": "A pane beside the chat with Ambient's triggers: switch one on or off, or watch for something new in one sentence.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "ambientUrl": {
+      "type": "string",
+      "title": "Ambient address",
+      "description": "Where the Ambient app's local API answers.",
+      "default": "http://127.0.0.1:8787"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bundle": {
+    "targets": ["nsis", "msi"],
+    "resources": { "binaries/_internal/": "_internal/" },
+    "windows": {
+      "nsis": {
+        "installMode": "perMachine",
+        "installerHooks": "../../packaging/windows/installer-hooks.nsh"
+      }
+    }
+  }
+}

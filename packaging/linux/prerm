@@ -1,0 +1,6 @@
+#!/bin/sh
+# Ambient .deb: before the files go. Stop a running Ambient so capture lets go of the network.
+set -e
+pkill -INT -x ambient-engine 2>/dev/null || true
+pkill -TERM -x ambient 2>/dev/null || true
+exit 0

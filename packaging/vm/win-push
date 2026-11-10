@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# win-push <local path> <remote path>: copy a file or folder into the Windows VM. Example: win-push dist C:/Users/ambient/dist
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+[ $# -eq 2 ] || { echo "usage: win-push <local> <remote>" >&2; exit 2; }
+vm_push win "$1" "$2"

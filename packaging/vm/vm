@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# vm <start|stop|restart|kill|status|enable|disable> [win|lin]: control the VMs (systemd units in WSL on the box).
+set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
+box "$BOX_ROOT/bin/vmctl ${1:-status} ${2:-}"

@@ -1,0 +1,31 @@
+#!/bin/sh
+# Ambient .deb: after removal. On purge, take back what Ambient added system-wide: its certificates,
+# the Firefox policy entries pointing at them, and the capture group. Per-user data stays
+# (~/.local/share/ambient, ~/.mitmproxy and the certificate in each browser profile): see docs/linux.md.
+set -e
+if [ "$1" = purge ]; then
+  rm -f /usr/local/share/ca-certificates/ambient-*.crt /usr/local/share/ca-certificates/ambient.crt
+  command -v update-ca-certificates >/dev/null && update-ca-certificates >/dev/null 2>&1 || true
+  if [ -f /etc/firefox/policies/policies.json ] && command -v python3 >/dev/null; then
+    python3 - <<'PY' || true
+import json, os
+path = "/etc/firefox/policies/policies.json"
+doc = json.load(open(path))
+certs = doc.get("policies", {}).get("Certificates", {})
+keep = [c for c in certs.get("Install", []) if "/ambient-ca-" not in c]
+if keep:
+    certs["Install"] = keep
+else:
+    certs.pop("Install", None)
+    if not certs:
+        doc.get("policies", {}).pop("Certificates", None)
+if doc.get("policies"):
+    json.dump(doc, open(path, "w"), indent=2)
+else:
+    os.remove(path)
+PY
+  fi
+  rm -f /etc/firefox/policies/ambient-ca-*.crt
+  getent group ambient-capture >/dev/null && groupdel ambient-capture 2>/dev/null || true
+fi
+exit 0

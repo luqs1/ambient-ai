@@ -1,0 +1,17 @@
+[Unit]
+Description=Ambient test VM (%i), QEMU/KVM
+After=network.target
+
+[Service]
+Type=simple
+User=luqs1
+SupplementaryGroups=kvm
+Environment=HOME=/home/luqs1
+ExecStart=/home/luqs1/ambient-vms/bin/run-vm %i
+ExecStop=/home/luqs1/ambient-vms/bin/vmctl _powerdown %i
+TimeoutStopSec=150
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

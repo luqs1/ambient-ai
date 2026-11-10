@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ambient</title>
+<style>
+  :root { color-scheme: light dark; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: grid; place-items: center;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    background: linear-gradient(180deg, #f6ece0, #d9e6e4); color: #2f3b3a;
+  }
+  @media (prefers-color-scheme: dark) { body { background: linear-gradient(180deg, #1d2221, #121716); color: #dfe7e5; } }
+  .wrap { text-align: center; }
+  .ripple { position: relative; width: 120px; height: 120px; margin: 0 auto 28px; }
+  .ripple i { position: absolute; inset: 0; border-radius: 50%; border: 3px solid #3a8078;
+              opacity: 0; animation: ripple 3s ease-out infinite; }
+  .ripple i:nth-child(2) { animation-delay: 1s; } .ripple i:nth-child(3) { animation-delay: 2s; }
+  .ripple b { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+              border-radius: 50%; background: #e88c5c; }
+  @keyframes ripple { 0% { transform: scale(.2); opacity: .8 } 100% { transform: scale(1); opacity: 0 } }
+  h1 { font-weight: 600; font-size: 20px; margin: 0 0 6px; }
+  p { margin: 0; opacity: .7; }
+  body.paused .ripple i { animation-play-state: paused; opacity: .25; transform: scale(.6); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="ripple"><i></i><i></i><i></i><b></b></div>
+    <h1 id="t">Ambient is starting…</h1>
+    <p id="s">Getting ready to notice things for your agents.</p>
+  </div>
+<script>
+  function render() {
+    const paused = location.hash === "#paused";
+    document.body.classList.toggle("paused", paused);
+    document.getElementById("t").textContent = paused ? "Ambient is paused" : "Ambient is starting…";
+    document.getElementById("s").textContent = paused
+      ? "Nothing is being watched. Resume from the " + (/Windows/.test(navigator.userAgent) ? "Ambient icon in the taskbar" : "menu bar") + " when you're ready."
+      : "Getting ready to notice things for your agents.";
+  }
+  window.addEventListener("hashchange", render); render();
+</script>
+</body>
+</html>

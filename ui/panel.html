@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ambient</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/assets/fonts.css">
+<style>
+  :root{
+    --paper:#f7f0dc; --card:#fffaee; --chip:#ece4cb;
+    --ink:#1b1747; --ink-2:#4a4577; --ink-3:#7a76a3;
+    --violet:#6a4fd0; --violet-ink:#5638c4; --lime:#c9ec3f; --lime-2:#b5d92c; --coral:#ff6f59; --aqua:#62e6d8; --teal-ink:#0e6b66;
+    --sky-a:#2420b8; --sky-b:#2d4fd0; --sky-c:#1e86b0;
+    --far:#b6a7f0; --far-2:#f0a9c0; --mid:#6a4fd0; --mid-2:#4f74d8; --meadow:#c8e64a; --meadow-2:#8dd05a; --pine-l:#3c8a76; --pine-d:#1e3a6e;
+    --on-sky:#fbf4e2; --on-sky-2:rgba(251,244,226,.8); --shadow:#1b1747;
+    --chip-lime:#e6f6a3; --chip-lime-ink:#2c3a07; --chip-aqua:#c9f6ef;
+    --display:"Young Serif", Georgia, serif; --body:"Schibsted Grotesk", -apple-system, sans-serif; --mono:"Spline Sans Mono", ui-monospace, monospace;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#13113a; --card:#1e1a55; --chip:#28236a; --ink:#f7f0dc; --ink-2:#c7c1ea; --ink-3:#928cc4;
+      --violet-ink:#b9a8ff; --teal-ink:#7ff0e3; --sky-a:#0b0a33; --sky-b:#1a1f72; --sky-c:#1d4f86;
+      --far:#5b4bb0; --far-2:#8a4f8e; --mid:#3b2c92; --mid-2:#2c3f8e; --meadow:#7f9c2a; --meadow-2:#4c8a4c; --pine-l:#23615a; --pine-d:#0f1b45;
+      --shadow:#05041a; --chip-lime:rgba(201,236,63,.16); --chip-lime-ink:#d8f56a; --chip-aqua:rgba(98,230,216,.14);
+      color-scheme:dark;
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0; height:100%; background:var(--paper); color:var(--ink); font:13.5px/1.45 var(--body); -webkit-font-smoothing:antialiased; overflow:hidden}
+  button{font:inherit; color:inherit}
+  .shell{display:flex; flex-direction:column; height:100%}
+
+  header{position:relative; flex:none; color:var(--on-sky); background:linear-gradient(180deg,var(--sky-a),var(--sky-b) 60%,var(--sky-c)); padding:12px 14px 34px; overflow:hidden}
+  header svg.valley{position:absolute; left:0; bottom:-1px; width:100%; height:30px}
+  .row{display:flex; align-items:center; gap:8px}
+  .brand{display:flex; align-items:center; gap:7px; font:400 17px/1 var(--display)}
+  .brand svg{width:22px; height:22px}
+  .status{display:inline-flex; align-items:center; gap:6px; font:500 10.5px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-sky-2)}
+  .status i{width:7px; height:7px; background:var(--lime); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); animation:breathe 2.6s ease-in-out infinite}
+  .status.off i{background:var(--coral); animation:none}
+  @keyframes breathe{50%{transform:scale(.55); opacity:.6}}
+  .grow{flex:1}
+  .hbtn{border:0; cursor:pointer; background:rgba(255,255,255,.14); color:var(--on-sky); font:600 11.5px/1 var(--body); padding:6px 9px;
+        clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+  .hbtn:hover{background:rgba(255,255,255,.26)}
+  .armed{margin-top:10px; display:flex; flex-wrap:wrap; gap:5px}
+  .armed span{max-width:230px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; display:inline-flex; align-items:center; gap:5px; font:600 11px/1 var(--body); color:#1b1747; background:var(--lime); padding:5px 7px;
+              clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+  .armed span i{width:6px; height:6px; background:#1b1747; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .armed small{font:500 10.5px/1.6 var(--mono); color:var(--on-sky-2)}
+
+  main{flex:1; overflow-y:auto; padding:6px 12px 14px}
+  h3{font:500 10.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin:14px 2px 8px}
+  .slip{position:relative; isolation:isolate; padding:10px 12px; margin-bottom:12px}
+  .slip::before,.slip::after{content:""; position:absolute; inset:0; clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+  .slip::before{background:var(--card); z-index:-1}
+  .slip::after{background:var(--shadow); z-index:-2; transform:translate(3px,3px)}
+  .slip.fresh::after{background:var(--violet)}
+  .who{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-2); min-width:0}
+  .who img,.who .tile{width:18px; height:18px; border-radius:5px; flex:none}
+  .who .tile{display:grid; place-items:center; background:var(--chip); font:600 10px var(--body)}
+  .who .l{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .who b{color:var(--ink); font-weight:600}
+  .who time{font:500 10.5px/1 var(--mono); color:var(--ink-3); white-space:nowrap}
+  .say{margin:6px 0 0; font:400 15px/1.38 var(--display); overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+  .acts{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+  .btn{border:0; cursor:pointer; font:600 12px/1 var(--body); padding:8px 10px; background:var(--chip); color:var(--ink);
+       clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+  .btn:hover{background:var(--chip-lime)}
+  .btn.go{background:var(--lime); color:#1b1747}
+  .btn.quiet{background:transparent; color:var(--ink-3); padding:8px 4px}
+  .btn:disabled{opacity:.55}
+  .result{margin-top:9px; padding:8px 10px; background:var(--chip-lime); font-size:12.5px; line-height:1.45; white-space:pre-wrap; overflow-wrap:anywhere;
+          display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden}
+  .result .by{display:flex; gap:6px; font:500 10.5px/1.3 var(--mono); color:var(--ink-2); margin-bottom:4px}
+  .result .by .grow{flex:1}
+  .result .by button{border:0; background:none; padding:0; cursor:pointer; font:600 11px var(--body); text-decoration:underline; text-underline-offset:2px}
+  .gate{display:flex; align-items:center; gap:5px; margin-top:8px; font:500 10.5px/1.3 var(--mono); color:var(--teal-ink)}
+  .gate svg{width:10px; height:10px; flex:none}
+  .thinking{display:inline-flex; gap:3px}
+  .thinking i{width:6px; height:6px; background:var(--violet); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); animation:hop 1s ease-in-out infinite}
+  .thinking i:nth-child(2){animation-delay:.15s} .thinking i:nth-child(3){animation-delay:.3s}
+  @keyframes hop{50%{transform:translateY(-3px)}}
+  .empty{text-align:center; padding:22px 10px 6px; color:var(--ink-2)}
+  .empty svg{width:160px; display:block; margin:0 auto 10px}
+  .empty b{display:block; font:400 16px/1.2 var(--display); color:var(--ink); margin-bottom:3px}
+
+  .trig{display:flex; gap:10px; align-items:flex-start; padding:9px 10px; margin-bottom:8px; background:var(--card); border-left:3px solid var(--far)}
+  .trig.auto{border-left-color:var(--lime-2)}
+  .trig .tl{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .trig .when{font-size:11.5px; color:var(--ink-3)}
+  .trig b{font:400 14.5px/1.3 var(--display)}
+  .trig .cond{display:inline-flex; align-items:center; gap:4px; font:500 10.5px/1.3 var(--mono); color:var(--teal-ink)}
+  .trig .cond svg{width:9px; height:9px}
+  .trig .mode{font:500 10.5px/1.3 var(--mono); color:var(--ink-3)}
+  .trig.auto .mode{color:var(--chip-lime-ink)}
+  .sw{appearance:none; width:32px; height:18px; margin:2px 0 0; flex:none; cursor:pointer; position:relative; background:var(--chip)}
+  .sw::after{content:""; position:absolute; top:3px; left:3px; width:12px; height:12px; background:var(--ink-3); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); transition:left .15s}
+  .sw:checked{background:var(--lime)} .sw:checked::after{left:17px; background:#1b1747}
+  .none{font-size:12px; color:var(--ink-3); margin:4px 2px 0} .none a{color:var(--violet-ink)}
+  footer{flex:none; display:flex; align-items:center; gap:8px; padding:10px 12px; border-top:1px solid color-mix(in srgb, var(--ink) 10%, transparent)}
+  footer .apps{display:flex; gap:5px}
+  footer .apps img,footer .apps .tile{width:20px; height:20px; border-radius:5px}
+  footer .apps .off{filter:grayscale(1); opacity:.4}
+  .toast{position:fixed; left:50%; bottom:58px; transform:translate(-50%,10px); opacity:0; background:var(--ink); color:var(--paper); font:500 12.5px var(--body); padding:7px 12px; transition:.2s; pointer-events:none}
+  .toast.on{opacity:1; transform:translate(-50%,0)}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="row">
+      <div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true">
+        <path fill="#2b27c9" d="M10 0H54L64 10V54L54 64H10L0 54V10Z"/><path fill="#1e86b0" d="M0 34L64 30V54L54 64H10L0 54Z"/>
+        <path fill="#ff8a6a" d="M46 9L52 15L46 21L40 15Z"/><path fill="#b6a7f0" d="M4 52L26 16L28 52Z"/><path fill="#6a4fd0" d="M26 16L48 52L28 52Z"/>
+        <path fill="#c8e64a" d="M28 58L44 30L45 58Z"/><path fill="#8dd05a" d="M44 30L62 58L45 58Z"/><path fill="#c8e64a" d="M0 54L64 50V54L54 64H10L0 54Z"/>
+        <path fill="#62e6d8" d="M22 64L31 52H35L29 64Z"/></svg>Ambient</div>
+      <span class="status" id="status"><i></i><span>Listening</span></span>
+      <span class="grow"></span>
+      <button class="hbtn" id="pause" hidden>Pause</button>
+    </div>
+    <div class="armed" id="armed"></div>
+    <svg class="valley" viewBox="0 0 380 30" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="var(--far)" d="M0 18L40 6L80 16L130 2L170 15L215 5L260 16L300 4L340 14L380 8V30H0Z"/>
+      <path fill="var(--mid)" d="M0 24L60 12L110 22L170 10L230 24L290 12L340 22L380 16V30H0Z"/>
+      <path fill="var(--meadow)" d="M0 27L120 22L240 28L380 23V30H0Z"/>
+      <path fill="var(--paper)" d="M0 29L380 28V30H0Z"/>
+    </svg>
+  </header>
+  <main id="main"></main>
+  <footer>
+    <div class="apps" id="apps"></div>
+    <span class="grow"></span>
+    <button class="btn" id="open">Open Ambient</button>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const report = msg => fetch("/api/clientlog", {method:"POST", headers:{"content-type":"application/json","X-Ambient":"1"}, body:JSON.stringify({page:location.pathname, msg:String(msg).slice(0,500)})}).catch(()=>{});
+addEventListener("error", e => report(`${e.message} @${e.lineno}`));
+addEventListener("unhandledrejection", e => report(`unhandled: ${e.reason?.message || e.reason}`));
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const post = (u, b={}) => fetch(u, {method:"POST", headers:{"content-type":"application/json","X-Ambient":"1"}, body:JSON.stringify(b)}).then(r=>r.json());
+const toast = t => { const e=$("#toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.h); toast.h=setTimeout(()=>e.classList.remove("on"),2000); };
+// Inside the Mac app these talk to the shell; in a plain browser they fall back to links.
+const tauri = window.__TAURI_INTERNALS__;
+const shell = (cmd, args) => tauri ? tauri.invoke(cmd, args).catch(e => { report(`invoke ${cmd}: ${e}`); toast("Couldn't reach the app"); throw e; }) : Promise.reject();
+report(`panel loaded, tauri=${!!tauri}`);
+if (tauri) $("#pause").hidden = false;
+$("#open").onclick = () => tauri ? shell("open_main") : (location.href = "/");
+$("#pause").onclick = async () => { const paused = await shell("toggle_pause"); $("#pause").textContent = paused ? "Resume" : "Pause"; refresh(); };
+
+function ago(ts){ const s=Date.now()/1000-ts; if(s<60) return "now"; if(s<3600) return Math.floor(s/60)+"m"; if(s<86400) return Math.floor(s/3600)+"h"; return Math.floor(s/86400)+"d"; }
+const HUES = ["#6a4fd0","#2b27c9","#1e86b0","#0e6b66","#c23a26","#a8690f","#3c8a76","#5638c4"];
+const hue = s => HUES[[...s].reduce((a,c) => (a*31 + c.charCodeAt(0)) >>> 0, 7) % HUES.length];
+const initials = app => { const w = app.match(/[A-Za-z0-9]+/g) || ["?"]; return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).replace(/^./, c => c.toUpperCase()); };
+const SITES = new Set();
+const rich = s => esc(s).replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
+const tileHTML = app => `<span class="tile" style="background:${hue(app)};color:#fff;font-size:8.5px">${esc(initials(app))}</span>`;
+const icon = app => `<img src="/api/icon/${encodeURIComponent(app)}.png" alt="" data-app="${esc(app)}">`;
+document.addEventListener("error", e => { const i = e.target; if (i.tagName === "IMG" && i.dataset.app) { SITES.add(i.dataset.app); i.outerHTML = tileHTML(i.dataset.app); } }, true);
+const LOCK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M3 5V3.5a3 3 0 0 1 6 0V5h1v7H2V5Zm1.5 0h3V3.5a1.5 1.5 0 0 0-3 0Z"/></svg>';
+const SCENE = `<svg viewBox="0 0 240 90" aria-hidden="true"><path fill="var(--far)" d="M0 66L40 34L70 54L110 22L150 52L185 30L240 60V90H0Z"/><path fill="var(--far-2)" d="M110 22L128 54L150 52Z"/><path fill="var(--mid)" d="M0 76L50 52L95 72L140 48L190 74L240 58V90H0Z"/><path fill="var(--meadow)" d="M0 84L80 76L160 88L240 80V90H0Z"/><path fill="var(--pine-d)" d="M196 86L204 56L212 86Z"/><path fill="var(--pine-l)" d="M204 56L212 86L207 86Z"/><path fill="var(--coral)" d="M178 16L184 22L178 28L172 22Z"/></svg>`;
+
+let TRIG = [], MS = {}, last = "";
+const glob = (pat, s) => new RegExp("^" + pat.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".") + "$").test(s);
+function line(m){
+  if (m.kind === "event") return `<b>${esc(m.app)}</b> · ${esc(m.title || "")}`;
+  if (m.kind === "meeting") return "<b>Meeting ended</b>";
+  if (m.kind === "sent") return `<b>You</b> · ${esc(m.place)}`;
+  if (m.kind === "dm") return `<b>${esc(m.who)}</b> messaged you`;
+  return `<b>${esc(m.who)}</b> in ${esc(m.place)}`;
+}
+function card(m){
+  const sig = m.sig || `${(m.app||"").toLowerCase()}:${m.kind}`;
+  const ts = TRIG.filter(t => t.enabled && !t.auto && (t.sigs||[]).some(p => glob(p, sig)));
+  const nothing = (m.action_result || "").trim() === "(nothing)";
+  let res = "";
+  if (m.action_status === "running") res = `<div class="result"><div class="by"><span class="thinking"><i></i><i></i><i></i></span>${esc(m.action)} · working</div></div>`;
+  else if (m.action_result && !nothing) res = `<div class="result"><div class="by"><span class="grow">${esc(m.action)}</span><button data-copy="${m.id}">Copy</button></div>${rich(m.action_result)}</div>`;
+  const g = (m.gate || []).find(g => g.passed);
+  return `<div class="slip ${m.status === "new" && !m.action_status ? "fresh" : ""}">
+    <div class="who">${icon(m.app)}<span class="l">${line(m)}</span><time>${ago(m.ts)}</time></div>
+    ${m.text ? `<p class="say">${esc(m.text)}</p>` : ""}
+    ${g ? `<div class="gate">${LOCK}${esc(g.name)} · ${Math.round(g.p*100)}% · checked on this device</div>` : ""}
+    ${m.status === "new" && !m.action_result ? `<div class="acts">${ts.slice(0,2).map((t,i) => `<button class="btn ${i?"":"go"}" data-run="${t.id}" data-id="${m.id}" ${m.action_status==="running"?"disabled":""}>${esc(t.name)}</button>`).join("")}<button class="btn quiet" data-done="${m.id}">Done</button></div>` : ""}
+    ${res}</div>`;
+}
+
+async function refresh(){
+  let st, ms, tr;
+  try {
+    [st, ms, tr] = await Promise.all([fetch("/api/status").then(r=>r.json()), fetch("/api/moments?limit=30").then(r=>r.json()), fetch("/api/triggers").then(r=>r.json())]);
+  } catch { $("#status").classList.add("off"); $("#status span").textContent = "Paused"; $("#main").innerHTML = `<div class="empty">${SCENE}<b>Ambient is paused.</b>Nothing is being watched.</div>`; return; }
+  $("#status").classList.remove("off"); $("#status span").textContent = "Listening"; $("#pause").textContent = "Pause";
+  TRIG = tr.triggers;
+  const day = Date.now()/1000 - 86400;
+  ms = ms.filter(m => m.status !== "dismissed" && m.ts > day);
+  MS = Object.fromEntries(ms.map(m => [m.id, m]));
+  const needs = ms.filter(m => m.status === "new" && m.kind !== "sent").slice(0, 6);
+  const ran = ms.filter(m => m.trigger_id && TRIG.find(t => t.id === m.trigger_id)?.auto && m.action_status !== "running" && (m.action_result || "").trim() !== "(nothing)").slice(0, 4);
+  const running = ms.filter(m => m.action_status === "running" && !needs.includes(m));
+  const armed = TRIG.filter(t => t.enabled && t.auto);
+  const sig = JSON.stringify([needs, ran, running, TRIG].map(x => JSON.stringify(x)));
+  if (sig === last) return; last = sig;
+  $("#armed").innerHTML = armed.length ? armed.slice(0, 2).map(t => `<span title="Runs on its own${t.semantic ? ", only when the on-device check says yes" : ""}"><i></i>${esc(t.name)}</span>`).join("") + `<small>${armed.length > 2 ? `+${armed.length - 2} more ` : ""}${armed.length === 1 ? "runs on its own" : "run on their own"}</small>` : "";
+  let html = "";
+  if (needs.length) html += `<h3>Needs you</h3>` + needs.map(card).join("");
+  if (running.length) html += `<h3>Working</h3>` + running.map(card).join("");
+  if (ran.length) html += `<h3>Ran on its own</h3>` + ran.map(card).join("");
+  if (!html) html = `<div class="empty">${SCENE}<b>All quiet.</b>Ambient will tap you when something's worth an agent's time.</div>`;
+  const EV = tr.events || {};
+  const where = a => a === "*" ? "your chat apps" : a;
+  const condText = c => c === "The writer promises to do something." ? "it's a promise" : c.replace(/\.$/, "");
+  const on = TRIG.filter(t => t.enabled), off = TRIG.length - on.length;
+  html += `<h3>Active triggers · ${on.length}</h3>` + (on.length ? on.sort((a,b) => b.auto - a.auto).map(t => `
+    <div class="trig ${t.auto ? "auto" : ""}">
+      <div class="tl"><span class="when">When ${esc(t.text || (t.kinds||[]).map(k => k.label).join(" or "))}${(t.kinds||[]).length ? " · " + esc([...new Set(t.kinds.map(k => k.app))].slice(0,3).join(", ")) : ""}</span>
+        <b>→ ${esc(t.name)}</b>
+        ${t.semantic ? `<span class="cond">${LOCK}only when the content matches · checked on this device</span>` : ""}
+        <span class="mode">${t.auto ? "Runs on its own" : "Asks you first"}${t.fired ? ` · fired ${t.fired}×` : ""}</span></div>
+      <input type="checkbox" class="sw" data-tid="${t.id}" checked aria-label="${esc(t.name)} on">
+    </div>`).join("") : `<p class="none">No triggers on.</p>`) + (off ? `<p class="none">${off} off · <a href="#" id="manage">manage</a></p>` : "");
+  $("#main").innerHTML = html;
+}
+// Connected apps in a fixed order (apps, then websites, each by name), same as the main window's header.
+const STATUS = {connected:"connected", paused:"paused", unreadable:"can't read this app", local:"reads its local storage"};
+async function loadApps(){
+  const w = await fetch("/api/connected").then(r=>r.json()).catch(()=>null); if (!Array.isArray(w)) return;
+  w.forEach(x => { if (x.website) SITES.add(x.app); });
+  const show = [...w.filter(x => !x.website), ...w.filter(x => x.website)].slice(0, 7);
+  const html = show.map(x => `<span class="${x.status === "paused" ? "off" : ""}" title="${esc(x.app)} · ${esc(STATUS[x.status] || "")}">${icon(x.app)}</span>`).join("") + (w.length > 7 ? `<small style="color:var(--ink-3);font-size:11px;align-self:center">+${w.length - 7}</small>` : "");
+  if (html !== loadApps.html) { loadApps.html = html; $("#apps").innerHTML = html; }
+}
+$("#main").addEventListener("change", async e => {
+  const id = e.target.dataset.tid; if (!id) return;
+  const t = TRIG.find(x => x.id == id);
+  await post("/api/triggers", {...t, enabled: e.target.checked}); toast(e.target.checked ? `${t.name} on` : `${t.name} off`);
+  last = ""; refresh();
+});
+$("#main").addEventListener("click", async e => {
+  if (e.target.id === "manage") { e.preventDefault(); return tauri ? shell("open_main") : (location.href = "/#triggers-col"); }
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.copy) { await navigator.clipboard.writeText(MS[b.dataset.copy].action_result); return toast("Copied"); }
+  if (b.dataset.run) { b.disabled = true; const r = await post(`/api/moments/${b.dataset.id}/action`, {trigger:+b.dataset.run}); if (r.error) toast(r.error); }
+  if (b.dataset.done) await post(`/api/moments/${b.dataset.done}/done`);
+  last = ""; refresh();
+});
+refresh(); loadApps(); setInterval(refresh, 2000); setInterval(loadApps, 15000);
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Run one test VM in the foreground. Called by systemd unit ambient-vm@<name>.service.
+set -euo pipefail
+name=${1:?usage: run-vm win|lin}
+root=${AMBIENT_VMS:-$HOME/ambient-vms}
+d=$root/$name
+source "$root/vm.conf"
+rm -f "$d/monitor.sock" "$d/qmp.sock"
+
+common=(
+  -name "ambient-$name" -machine q35,accel=kvm -display none
+  -device qemu-xhci -device usb-tablet
+  -monitor "unix:$d/monitor.sock,server,nowait"
+  -qmp "unix:$d/qmp.sock,server,nowait"
+  -pidfile "$d/qemu.pid"
+)
+
+case "$name" in
+win)
+  # CPU: host passthrough plus every Hyper-V enlightenment KVM offers (what Windows guests are normally run with).
+  # svm is hidden so Windows cannot start its own hypervisor (VBS/WSL2) a third level down; arch_capabilities is
+  # hidden because Windows 11 misbehaves when it sees that Intel MSR on an AMD CPU.
+  cpu="host,migratable=no,svm=off,arch_capabilities=off,hv_passthrough,hv-evmcs=off"
+  grep -qw avic /proc/cpuinfo || cpu+=",hv-avic=off"
+  args=(
+    -cpu "$cpu"
+    -global kvm-pit.lost_tick_policy=discard
+    -action panic=none   # on a blue screen let Windows write its dump and reboot itself
+    -smp "$WIN_CPUS,sockets=1,cores=$WIN_CPUS,threads=1" -m "$WIN_MEM"
+    -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd
+    -drive "if=pflash,format=raw,file=$d/OVMF_VARS.fd"
+    # NVMe + e1000e: both have drivers built into Windows 11, so no third-party driver ISO is needed.
+    # cache=none: guest disk I/O bypasses the WSL page cache, which would otherwise fill WSL's memory
+    # allowance and squeeze the Windows host.
+    -drive "file=$d/disk.qcow2,if=none,id=d0,format=qcow2,cache=none,discard=unmap"
+    -device nvme,drive=d0,serial=ambientwin0,bootindex=1
+    -netdev "user,id=n0,hostname=ambient-win,hostfwd=tcp:127.0.0.1:$WIN_SSH-:22,hostfwd=tcp:127.0.0.1:$WIN_RDP-:3389"
+    -device e1000e,netdev=n0,mac=52:54:00:a3:b1:01
+    -vga std -rtc base=localtime
+    -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1
+    -vnc "127.0.0.1:$WIN_VNC"
+  )
+  # Install media are only attached while the files exist (delete them after install to save space).
+  if [ -f "$root/iso/win11-eval.iso" ]; then
+    args+=(-drive "file=$root/iso/win11-eval.iso,media=cdrom,if=none,id=cd0,readonly=on" -device ide-cd,drive=cd0,bus=ide.0,bootindex=2)
+  fi
+  if [ -f "$d/unattend.iso" ]; then
+    args+=(-drive "file=$d/unattend.iso,media=cdrom,if=none,id=cd1,readonly=on" -device ide-cd,drive=cd1,bus=ide.1)
+  fi
+  ;;
+lin)
+  args=(
+    -cpu host -smp "$LIN_CPUS" -m "$LIN_MEM"
+    -drive "file=$d/disk.qcow2,if=virtio,format=qcow2,cache=none,discard=unmap"
+    -drive "file=$d/seed.iso,media=cdrom,readonly=on"
+    -netdev "user,id=n0,hostname=ambient-lin,hostfwd=tcp:127.0.0.1:$LIN_SSH-:22"
+    -device virtio-net-pci,netdev=n0,mac=52:54:00:a3:b1:02
+    -device virtio-vga -device virtio-rng-pci
+    -device virtio-balloon,free-page-reporting=on
+    -serial "file:$d/serial.log"
+    -vnc "127.0.0.1:$LIN_VNC"
+  )
+  ;;
+*) echo "unknown vm: $name" >&2; exit 2 ;;
+esac
+
+exec qemu-system-x86_64 "${common[@]}" "${args[@]}"
